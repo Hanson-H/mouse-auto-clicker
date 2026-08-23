@@ -1,22 +1,26 @@
 {
   "name": "mouse-auto-clicker-electron",
   "productName": "鼠标连点器",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "鼠标连点器 - Electron 版（自定义启动/暂停快捷键）",
   "main": "main.js",
   "author": "Hanson",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dev": "vite",
+    "build:ui": "vite build",
+    "pack": "npm run build:ui && electron-builder --dir",
+    "dist": "npm run build:ui && electron-builder"
   },
   "devDependencies": {
     "electron": "^33.0.0",
     "electron-builder": "^25.0.0"
   },
   "dependencies": {
-    "koffi": "^2.9.0"
+    "koffi": "^2.9.0",
+    "naive-ui": "^2.45.2",
+    "vue": "^3.5.41"
   },
   "build": {
     "appId": "com.hanson.mouseautoclicker",
@@ -27,7 +31,7 @@
     "files": [
       "main.js",
       "preload.js",
-      "renderer/**/*",
+      "renderer/dist/**/*",
       "app.ico"
     ],
     "win": {
@@ -35,7 +39,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },

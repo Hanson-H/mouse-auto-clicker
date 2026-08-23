@@ -1,5 +1,7 @@
 node_modules/
 dist/
+renderer/dist/
+.npm-cache/
 build/
 *.log
 .DS_Store

@@ -2,88 +2,11 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws://localhost:5173 ws://127.0.0.1:5173;">
   <title>鼠标连点器</title>
-  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- 标题栏 -->
-  <header>
-    <h1>🖱 鼠标连点器</h1>
-    <div class="hotkey-badge" id="hotkeyBadge">F6 / F7</div>
-  </header>
-
-  <!-- 状态卡片 -->
-  <section class="card status-card">
-    <div class="status-ring" id="statusRing">
-      <div class="status-dot" id="statusDot"></div>
-    </div>
-    <div class="status-text" id="statusText">已停止</div>
-    <div class="status-count" id="statusCount">累计点击 0 次</div>
-    <button class="toggle-btn" id="toggleBtn">开始连点</button>
-  </section>
-
-  <!-- 点击间隔 -->
-  <section class="card">
-    <h2>点击间隔</h2>
-    <div class="row">
-      <input type="text" id="intervalInput" class="num-input" value="100">
-      <span class="unit">毫秒 (ms)</span>
-    </div>
-    <p class="hint">每次点击之间的等待时间，最小 10 ms</p>
-  </section>
-
-  <!-- 点击位置 -->
-  <section class="card">
-    <h2>点击位置</h2>
-    <div class="seg" id="modeSeg">
-      <button class="seg-btn active" data-value="follow">跟随鼠标</button>
-      <button class="seg-btn" data-value="fixed">固定位置</button>
-    </div>
-    <div class="row fixed-row" id="fixedRow">
-      <label>X</label>
-      <input type="text" id="posX" class="num-input small" value="500">
-      <label>Y</label>
-      <input type="text" id="posY" class="num-input small" value="400">
-      <button class="pick-btn" id="pickBtn">⏱ 3 秒后拾取</button>
-    </div>
-  </section>
-
-  <!-- 点击方式 -->
-  <section class="card">
-    <h2>点击方式</h2>
-    <div class="row spread">
-      <span class="label">鼠标按键</span>
-      <div class="seg small" id="buttonSeg">
-        <button class="seg-btn active" data-value="left">左键</button>
-        <button class="seg-btn" data-value="right">右键</button>
-      </div>
-    </div>
-    <div class="row spread">
-      <span class="label">点击类型</span>
-      <div class="seg small" id="typeSeg">
-        <button class="seg-btn active" data-value="single">单击</button>
-        <button class="seg-btn" data-value="double">双击</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- 快捷键（新功能：自定义启动/暂停） -->
-  <section class="card">
-    <h2>快捷键</h2>
-    <div class="row spread">
-      <span class="label">启动连点</span>
-      <button class="hotkey-btn" id="startHotkeyBtn" title="点击后按下想要的组合键">F6</button>
-    </div>
-    <div class="row spread">
-      <span class="label">暂停连点</span>
-      <button class="hotkey-btn" id="stopHotkeyBtn" title="点击后按下想要的组合键">F7</button>
-    </div>
-    <p class="hint" id="hotkeyTip">点击右侧按键后，直接按下新快捷键即可更换；两个键设为相同时按一下启动、再按停止</p>
-  </section>
-
-  <footer>提示：若目标程序以管理员身份运行，连点器也需管理员身份运行</footer>
-
-  <script src="app.js"></script>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
 </body>
 </html>
