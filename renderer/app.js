@@ -164,7 +164,10 @@ async function finishCapture(accelerator) {
     if (which === 'start') cfg.startHotkey = res.startHotkey;
     else cfg.stopHotkey = res.stopHotkey;
     btn.textContent = accelerator;
-    els.hotkeyTip.textContent = `✓ ${accelerator} 已生效（点击右侧按键可再次更换）`;
+    const same = cfg.startHotkey === cfg.stopHotkey;
+    els.hotkeyTip.textContent = same
+      ? `✓ ${accelerator} 已生效（同一键切换：按下启动，再按停止）`
+      : `✓ ${accelerator} 已生效（点击右侧按键可再次更换）`;
   } else {
     btn.textContent = btn.dataset.old;
     els.hotkeyTip.textContent = `✗ ${accelerator}：${res.message}`;
@@ -192,7 +195,10 @@ function onGlobalKeydown(e) {
 }
 
 function updateBadge() {
-  if (cfg) els.hotkeyBadge.textContent = `${cfg.startHotkey} 启动 / ${cfg.stopHotkey} 暂停`;
+  if (!cfg) return;
+  els.hotkeyBadge.textContent = cfg.startHotkey === cfg.stopHotkey
+    ? `${cfg.startHotkey} 启动/暂停`
+    : `${cfg.startHotkey} 启动 / ${cfg.stopHotkey} 暂停`;
 }
 
 // ---------------- 状态渲染 ----------------

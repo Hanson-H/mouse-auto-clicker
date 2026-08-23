@@ -143,6 +143,18 @@ function stopClicking() {
 function registerHotkeys() {
   globalShortcut.unregisterAll();
   const result = { start: true, stop: true, message: '' };
+  if (cfg.startHotkey === cfg.stopHotkey) {
+    // 启动/暂停为同一快捷键：切换模式（未运行→启动，运行中→停止）
+    try {
+      const toggle = () => (running ? stopClicking() : startClicking());
+      globalShortcut.register(cfg.startHotkey, toggle);
+    } catch (e) {
+      result.start = false;
+      result.stop = false;
+      result.message = `快捷键 ${cfg.startHotkey} 注册失败 `;
+    }
+    return result;
+  }
   try {
     globalShortcut.register(cfg.startHotkey, startClicking);
   } catch (e) {
@@ -171,16 +183,14 @@ ipcMain.handle('cfg:save', (_e, patch) => {
 
 ipcMain.handle('hotkey:set', (_e, { which, accelerator }) => {
   if (!accelerator) return { ok: false, message: '快捷键为空' };
-  const other = which === 'start' ? cfg.stopHotkey : cfg.startHotkey;
-  if (accelerator === other) {
-    return { ok: false, message: '与另一个快捷键冲突' };
-  }
-  const oldVal = cfg[which === 'start' ? 'startHotkey' : 'stopHotkey'];
-  cfg[which === 'start' ? 'startHotkey' : 'stopHotkey'] = accelerator;
+  // 允许启动/暂停设为同一快捷键（切换模式），仅做注册有效性校验
+  const key = which === 'start' ? 'startHotkey' : 'stopHotkey';
+  const oldVal = cfg[key];
+  cfg[key] = accelerator;
   const result = registerHotkeys();
   if (!result.start || !result.stop) {
     // 注册失败则回滚
-    cfg[which === 'start' ? 'startHotkey' : 'stopHotkey'] = oldVal;
+    cfg[key] = oldVal;
     registerHotkeys();
     return { ok: false, message: result.message || '注册失败（可能被其他程序占用）' };
   }
