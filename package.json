@@ -1,0 +1,49 @@
+{
+  "name": "mouse-auto-clicker-electron",
+  "productName": "鼠标连点器",
+  "version": "2.0.0",
+  "description": "鼠标连点器 - Electron 版（自定义启动/暂停快捷键）",
+  "main": "main.js",
+  "author": "Hanson",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "dependencies": {
+    "koffi": "^2.9.0"
+  },
+  "build": {
+    "appId": "com.hanson.mouseautoclicker",
+    "productName": "鼠标连点器",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "app.ico"
+    ],
+    "win": {
+      "icon": "app.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "鼠标连点器"
+    }
+  }
+}
