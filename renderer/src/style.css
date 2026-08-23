@@ -272,3 +272,46 @@ body {
 .n-input-number {
   background: rgba(255, 255, 255, 0.04);
 }
+
+/* ---------- 重置按钮行 ---------- */
+.reset-row {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.reset-row .n-button {
+  color: #64748b;
+  font-size: 12px;
+  transition: color 0.2s;
+}
+
+.reset-row .n-button:hover {
+  color: #7dd3fc;
+}
+
+/* ---------- 滚动条美化（科技感青蓝主题） ---------- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.18);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.38);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

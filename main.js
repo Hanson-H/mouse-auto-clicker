@@ -145,27 +145,22 @@ function registerHotkeys() {
   const result = { start: true, stop: true, message: '' };
   if (cfg.startHotkey === cfg.stopHotkey) {
     // 启动/暂停为同一快捷键：切换模式（未运行→启动，运行中→停止）
-    try {
-      const toggle = () => (running ? stopClicking() : startClicking());
-      globalShortcut.register(cfg.startHotkey, toggle);
-    } catch (e) {
+    const toggle = () => (running ? stopClicking() : startClicking());
+    const ok = globalShortcut.register(cfg.startHotkey, toggle);
+    if (!ok) {
       result.start = false;
       result.stop = false;
-      result.message = `快捷键 ${cfg.startHotkey} 注册失败 `;
+      result.message = `快捷键 ${cfg.startHotkey} 注册失败（可能被其他程序占用）`;
     }
     return result;
   }
-  try {
-    globalShortcut.register(cfg.startHotkey, startClicking);
-  } catch (e) {
+  if (!globalShortcut.register(cfg.startHotkey, startClicking)) {
     result.start = false;
-    result.message += `启动快捷键 ${cfg.startHotkey} 注册失败 `;
+    result.message += `启动快捷键 ${cfg.startHotkey} 注册失败（可能被其他程序占用）`;
   }
-  try {
-    globalShortcut.register(cfg.stopHotkey, stopClicking);
-  } catch (e) {
+  if (!globalShortcut.register(cfg.stopHotkey, stopClicking)) {
     result.stop = false;
-    result.message += `暂停快捷键 ${cfg.stopHotkey} 注册失败`;
+    result.message += `暂停快捷键 ${cfg.stopHotkey} 注册失败（可能被其他程序占用）`;
   }
   return result;
 }
@@ -180,6 +175,15 @@ ipcMain.handle('cfg:save', (_e, patch) => {
   saveConfig();
   return { ...cfg };
 });
+
+// 录制快捷键时挂起全部全局热键，避免旧键拦截按键导致录制失败
+ipcMain.handle('hotkey:suspend', () => {
+  globalShortcut.unregisterAll();
+  return true;
+});
+
+// 录制结束（成功或取消）后恢复注册
+ipcMain.handle('hotkey:resume', () => registerHotkeys());
 
 ipcMain.handle('hotkey:set', (_e, { which, accelerator }) => {
   if (!accelerator) return { ok: false, message: '快捷键为空' };
@@ -201,6 +205,15 @@ ipcMain.handle('hotkey:set', (_e, { which, accelerator }) => {
 ipcMain.handle('click:start', startClicking);
 ipcMain.handle('click:stop', stopClicking);
 ipcMain.handle('cursor:pos', () => getCursorPos());
+
+// 重置为默认配置（含快捷键），并停止连点
+ipcMain.handle('cfg:reset', () => {
+  stopClicking();
+  cfg = { ...DEFAULT_CFG };
+  saveConfig();
+  registerHotkeys();
+  return { ...cfg, running, clickCount };
+});
 
 // ----------------------------------------------------------------------------
 // 窗口

@@ -91,6 +91,13 @@
         <p class="hint">{{ hotkeyTip }}</p>
       </section>
 
+      <!-- 重置 -->
+      <div class="reset-row">
+        <n-button size="small" quaternary @click="resetAll">
+          ↺ 重置为默认设置
+        </n-button>
+      </div>
+
       <footer class="footer">提示：若目标程序以管理员身份运行，连点器也需管理员身份运行</footer>
     </div>
   </n-config-provider>
@@ -173,6 +180,23 @@ function toggleClick() {
   else bridge.startClick();
 }
 
+async function resetAll() {
+  const c = await bridge.resetConfig();
+  Object.assign(cfg, {
+    interval_ms: c.interval_ms,
+    mode: c.mode,
+    pos_x: c.pos_x,
+    pos_y: c.pos_y,
+    button: c.button,
+    double: !!c.double,
+    startHotkey: c.startHotkey,
+    stopHotkey: c.stopHotkey,
+  });
+  running.value = !!c.running;
+  clickCount.value = c.clickCount || 0;
+  hotkeyTip.value = '已重置为默认设置（间隔 100ms、跟随鼠标、左键单击、F6/F7）';
+}
+
 // ---------- 坐标拾取 ----------
 function startPick() {
   if (pickCounting.value) return;
@@ -214,6 +238,8 @@ function eventToAccelerator(e) {
 function beginCapture(which) {
   if (capturing.value) return;
   capturing.value = which;
+  // 挂起全部全局热键，避免旧键在系统层拦截按键导致录制失败
+  bridge.suspendHotkeys();
   hotkeyTip.value = '按下新快捷键（支持 Ctrl / Alt / Shift + 字母/数字/F1-F24），按 Esc 取消';
 }
 
@@ -238,6 +264,7 @@ function onGlobalKeydown(e) {
   e.stopPropagation();
   if (e.key === 'Escape') {
     capturing.value = null;
+    bridge.resumeHotkeys(); // 取消录制，恢复原热键
     hotkeyTip.value = '点击右侧按键后，直接按下新快捷键即可更换；两个键设为相同时按一下启动、再按停止';
     return;
   }
