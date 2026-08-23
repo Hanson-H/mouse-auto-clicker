@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('api', {
   suspendHotkeys: () => ipcRenderer.invoke('hotkey:suspend'),
   resumeHotkeys: () => ipcRenderer.invoke('hotkey:resume'),
   resetConfig: () => ipcRenderer.invoke('cfg:reset'),
+  setTheme: (t) => ipcRenderer.invoke('theme:set', t),
   startClick: () => ipcRenderer.invoke('click:start'),
   stopClick: () => ipcRenderer.invoke('click:stop'),
   getCursorPos: () => ipcRenderer.invoke('cursor:pos'),

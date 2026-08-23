@@ -153,7 +153,7 @@ function applyTheme(t) {
 function toggleTheme() {
   const next = theme.value === 'light' ? 'dark' : 'light';
   applyTheme(next);
-  bridge.saveConfig({ theme: next });
+  bridge.setTheme(next); // 同步原生标题栏颜色
 }
 
 // ---------- 状态 ----------

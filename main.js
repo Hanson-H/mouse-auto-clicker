@@ -1,7 +1,7 @@
 // -*- coding: utf-8 -*-
 // 鼠标连点器 - Electron 版 主进程
 // 功能：Win32 SendInput 模拟点击、自定义启动/暂停全局快捷键、配置持久化
-const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain, nativeTheme } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const koffi = require('koffi');
@@ -225,7 +225,21 @@ ipcMain.handle('cfg:reset', () => {
   cfg = { ...DEFAULT_CFG };
   saveConfig();
   registerHotkeys();
+  applyNativeTheme();
   return { ...cfg, running, clickCount };
+});
+
+// 让原生标题栏颜色跟随应用主题（覆盖系统深色模式）
+function applyNativeTheme() {
+  nativeTheme.themeSource = cfg.theme === 'light' ? 'light' : 'dark';
+}
+
+// 主题切换：同步原生标题栏颜色
+ipcMain.handle('theme:set', (_e, t) => {
+  cfg.theme = t === 'light' ? 'light' : 'dark';
+  saveConfig();
+  applyNativeTheme();
+  return { theme: cfg.theme };
 });
 
 // ----------------------------------------------------------------------------
@@ -246,7 +260,7 @@ function createWindow() {
     fullscreenable: false,
     title: '鼠标连点器',
     icon: path.join(__dirname, 'app.ico'),
-    backgroundColor: '#14161b',
+    backgroundColor: cfg.theme === 'light' ? '#f4f7fb' : '#14161b',
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -281,6 +295,7 @@ if (!gotTheLock) {
 
 app.whenReady().then(() => {
   loadConfig();
+  applyNativeTheme();
   registerHotkeys();
   createWindow();
 
