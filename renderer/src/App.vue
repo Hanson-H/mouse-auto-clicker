@@ -1,10 +1,15 @@
 <template>
-  <n-config-provider :theme="darkTheme" :locale="zhCN" :theme-overrides="themeOverrides">
+  <n-config-provider :theme="theme === 'light' ? lightTheme : darkTheme" :locale="zhCN" :theme-overrides="themeOverrides">
     <div class="app">
       <!-- 顶栏 -->
       <header class="app-header">
         <div class="app-title">🖱 鼠标连点器</div>
-        <div class="hotkey-badge">{{ hotkeyBadgeText }}</div>
+        <div class="header-right">
+          <div class="hotkey-badge">{{ hotkeyBadgeText }}</div>
+          <button class="theme-toggle" :title="theme === 'light' ? '切换到暗色' : '切换到浅色'" @click="toggleTheme">
+            {{ theme === 'light' ? '☀' : '☾' }}
+          </button>
+        </div>
       </header>
 
       <!-- 状态卡 -->
@@ -104,7 +109,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import {
   NConfigProvider,
   NInputNumber,
@@ -112,27 +117,44 @@ import {
   NRadioButton,
   NButton,
   darkTheme,
+  lightTheme,
   zhCN,
 } from 'naive-ui';
 
 const bridge = window.api;
 
-// ---------- 主题（科技感青蓝配色） ----------
-const themeOverrides = {
+// ---------- 主题（科技感青蓝配色，随明暗主题切换） ----------
+const theme = ref('dark');
+const themeOverrides = computed(() => ({
   common: {
-    primaryColor: '#22d3ee',
-    primaryColorHover: '#67e8f9',
-    primaryColorPressed: '#06b6d4',
-    primaryColorSuppl: '#22d3ee',
+    primaryColor: theme.value === 'light' ? '#0891b2' : '#22d3ee',
+    primaryColorHover: theme.value === 'light' ? '#06b6d4' : '#67e8f9',
+    primaryColorPressed: theme.value === 'light' ? '#0e7490' : '#06b6d4',
+    primaryColorSuppl: theme.value === 'light' ? '#0891b2' : '#22d3ee',
     borderRadius: '10px',
     bodyColor: 'transparent',
     cardColor: 'transparent',
-    inputColor: 'rgba(255,255,255,0.05)',
-    inputColorDisabled: 'rgba(255,255,255,0.02)',
-    actionColor: 'rgba(255,255,255,0.05)',
-    buttonColor2: 'rgba(255,255,255,0.06)',
+    inputColor: theme.value === 'light' ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.05)',
+    inputColorDisabled: theme.value === 'light' ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.02)',
+    actionColor: theme.value === 'light' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.05)',
+    buttonColor2: theme.value === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)',
+    textColorBase: theme.value === 'light' ? '#1e293b' : '#dbe4f0',
+    textColor1: theme.value === 'light' ? '#0f172a' : '#e2e8f0',
+    textColor2: theme.value === 'light' ? '#334155' : '#9fb2cc',
+    textColor3: theme.value === 'light' ? '#64748b' : '#5b6b82',
   },
-};
+}));
+
+function applyTheme(t) {
+  theme.value = t;
+  document.body.setAttribute('data-theme', t);
+}
+
+function toggleTheme() {
+  const next = theme.value === 'light' ? 'dark' : 'light';
+  applyTheme(next);
+  bridge.saveConfig({ theme: next });
+}
 
 // ---------- 状态 ----------
 const cfg = reactive({
@@ -194,6 +216,7 @@ async function resetAll() {
   });
   running.value = !!c.running;
   clickCount.value = c.clickCount || 0;
+  applyTheme(c.theme === 'light' ? 'light' : 'dark');
   hotkeyTip.value = '已重置为默认设置（间隔 100ms、跟随鼠标、左键单击、F6/F7）';
 }
 
@@ -285,6 +308,7 @@ onMounted(async () => {
     startHotkey: c.startHotkey,
     stopHotkey: c.stopHotkey,
   });
+  applyTheme(c.theme === 'light' ? 'light' : 'dark');
   running.value = !!c.running;
   clickCount.value = c.clickCount || 0;
 

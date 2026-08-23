@@ -29,6 +29,13 @@ const SendInput = user32.func('int SendInput(int cInputs, INPUT *pInputs, int cb
 const GetCursorPos = user32.func('int GetCursorPos(_Out_ POINT *lpPoint)');
 const SetCursorPos = user32.func('int SetCursorPos(int X, int Y)');
 
+// 提升 Windows 定时器分辨率到 1ms，消除 setTimeout 在短间隔下的量化误差
+try {
+  const winmm = koffi.load('winmm.dll');
+  const timeBeginPeriod = winmm.func('uint32 timeBeginPeriod(uint32 uPeriod)');
+  timeBeginPeriod(1);
+} catch (e) { /* 忽略：非关键，不影响主流程 */ }
+
 const INPUT_MOUSE = 0;
 const MOUSEEVENTF_LEFTDOWN = 0x0002;
 const MOUSEEVENTF_LEFTUP = 0x0004;
@@ -69,6 +76,7 @@ const DEFAULT_CFG = {
   double: false,
   startHotkey: 'F6',     // 启动连点快捷键
   stopHotkey: 'F7',      // 暂停连点快捷键
+  theme: 'dark',         // dark / light
 };
 
 let cfg = { ...DEFAULT_CFG };
@@ -94,6 +102,7 @@ let running = false;
 let clickCount = 0;
 let timer = null;
 let mainWindow = null;
+let nextTickAt = 0; // 下一次点击的绝对时间戳（ms），用于消除 setTimeout 累积漂移
 
 function pushStatus() {
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -111,9 +120,12 @@ function clickLoop() {
     !!cfg.double
   );
   clickCount += 1;
-  if (running) {
-    timer = setTimeout(clickLoop, Math.max(cfg.interval_ms, 10));
-  }
+  if (!running) return;
+  // 基于绝对时间戳补偿：无论本次点击/调度耗时多少，下一次都落在 nextTickAt 上
+  const interval = Math.max(Number(cfg.interval_ms) || 10, 10);
+  nextTickAt += interval;
+  const delay = nextTickAt - Date.now();
+  timer = setTimeout(clickLoop, Math.max(delay, 0));
 }
 
 function startClicking() {
@@ -126,6 +138,7 @@ function startClicking() {
   }
   running = true;
   saveConfig();
+  nextTickAt = Date.now(); // 立即点第一下
   clickLoop();
   pushStatus();
 }
@@ -250,6 +263,20 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, 'renderer', 'dist', 'index.html'));
   }
   mainWindow.on('closed', () => { mainWindow = null; });
+}
+
+// 单实例锁：只允许一个实例运行，二次启动时聚焦已有窗口
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
 }
 
 app.whenReady().then(() => {
