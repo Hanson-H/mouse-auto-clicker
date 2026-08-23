@@ -1,5 +1,5 @@
 /* ============================================================================
-   主题变量：默认暗色，body[data-theme="light"] 覆盖为浅色
+   主题变量：默认暗色，:root[data-theme="light"] 覆盖为浅色
    ========================================================================== */
 :root {
   color-scheme: dark;
@@ -42,7 +42,7 @@
   --scroll-thumb-hover: rgba(34, 211, 238, 0.38);
 }
 
-body[data-theme="light"] {
+:root[data-theme="light"] {
   color-scheme: light;
   --bg-grad-1: rgba(34, 211, 238, 0.16);
   --bg-grad-2: rgba(99, 102, 241, 0.10);

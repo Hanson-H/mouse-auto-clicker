@@ -147,7 +147,8 @@ const themeOverrides = computed(() => ({
 
 function applyTheme(t) {
   theme.value = t;
-  document.body.setAttribute('data-theme', t);
+  // 设置在 <html> 上（而非 body），确保滚动条等根级伪元素也能继承主题变量
+  document.documentElement.setAttribute('data-theme', t);
 }
 
 function toggleTheme() {
