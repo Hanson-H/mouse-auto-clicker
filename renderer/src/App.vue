@@ -6,11 +6,40 @@
         <div class="app-title">🖱 鼠标连点器</div>
         <div class="header-right">
           <div class="hotkey-badge">{{ hotkeyBadgeText }}</div>
+          <div
+            class="priv-badge"
+            :class="isAdmin ? 'admin' : 'user'"
+            :title="isAdmin ? '已以管理员身份运行，全局输入生效' : '未提权：部分应用（如管理员权限程序、游戏启动器）会拒绝接收模拟输入。点击此处一键提权重启'"
+            @click="!isAdmin && relaunchAsAdmin()"
+          >
+            {{ isAdmin ? '🛡 管理员' : '⚠ 普通' }}
+          </div>
           <button class="theme-toggle" :title="theme === 'light' ? '切换到暗色' : '切换到浅色'" @click="toggleTheme">
             {{ theme === 'light' ? '☀' : '☾' }}
           </button>
         </div>
       </header>
+
+      <!-- 权限提示：未以管理员身份运行时显示 -->
+      <section v-if="!isAdmin" class="glass-card priv-alert">
+        <div class="priv-alert-row">
+          <div class="priv-alert-icon">⚠️</div>
+          <div class="priv-alert-body">
+            <div class="priv-alert-title">未以管理员身份运行</div>
+            <div class="priv-alert-text">任务管理器、注册表编辑器、游戏启动器、需要管理员权限的程序会拒绝接收模拟输入，导致点击失效。选择下方任一方式以管理员身份运行：</div>
+          </div>
+        </div>
+        <div class="priv-actions">
+          <button class="priv-relaunch-btn" @click="relaunchAsAdmin">🔓 立即以管理员重启（UAC）</button>
+          <button class="priv-shortcut-btn" :disabled="creatingShortcut" @click="createAdminShortcut('desktop')">
+            {{ creatingShortcut ? '正在创建…' : '📌 创建桌面"以管理员启动"快捷方式' }}
+          </button>
+          <button class="priv-shortcut-btn secondary" :disabled="creatingShortcut" @click="createAdminShortcut('startmenu')">
+            {{ creatingShortcut ? '正在创建…' : '📋 添加到开始菜单' }}
+          </button>
+        </div>
+        <div v-if="shortcutTip" class="priv-tip">{{ shortcutTip }}</div>
+      </section>
 
       <!-- 状态卡 -->
       <section class="glass-card status-card" :class="{ running }">
@@ -103,7 +132,9 @@
         </n-button>
       </div>
 
-      <footer class="footer">提示：若目标程序以管理员身份运行，连点器也需管理员身份运行</footer>
+      <footer class="footer">
+        提示：若目标程序以管理员身份运行，连点器也需管理员身份运行（点击右上角徽章提权）
+      </footer>
     </div>
   </n-config-provider>
 </template>
@@ -170,6 +201,7 @@ const cfg = reactive({
 });
 const running = ref(false);
 const clickCount = ref(0);
+const isAdmin = ref(false); // 是否以管理员身份运行
 const pickCounting = ref(false);
 const pickBtnText = ref('⏱ 3 秒后拾取');
 const capturing = ref(null); // 'start' | 'stop' | null
@@ -201,6 +233,31 @@ function saveCfg() {
 function toggleClick() {
   if (running.value) bridge.stopClick();
   else bridge.startClick();
+}
+
+// 以管理员身份重启（触发 UAC）。UAC 确认后旧进程自动退出，新进程以管理员权限启动
+function relaunchAsAdmin() {
+  bridge.relaunchAsAdmin();
+}
+
+// 创建桌面/开始菜单的"以管理员启动"快捷方式
+const creatingShortcut = ref(false);
+const shortcutTip = ref('');
+async function createAdminShortcut(location) {
+  if (creatingShortcut.value) return;
+  creatingShortcut.value = true;
+  shortcutTip.value = '';
+  try {
+    const r = await bridge.createAdminShortcut({ location });
+    if (r.ok) {
+      const where = location === 'startmenu' ? '开始菜单' : '桌面';
+      shortcutTip.value = `✓ 已创建到${where}：${r.lnkPath}\n以后双击此快捷方式即可自动以管理员身份启动`;
+    } else {
+      shortcutTip.value = `✗ 创建失败：${r.message || '未知错误'}`;
+    }
+  } finally {
+    creatingShortcut.value = false;
+  }
 }
 
 async function resetAll() {

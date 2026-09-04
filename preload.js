@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld('api', {
   startClick: () => ipcRenderer.invoke('click:start'),
   stopClick: () => ipcRenderer.invoke('click:stop'),
   getCursorPos: () => ipcRenderer.invoke('cursor:pos'),
+  relaunchAsAdmin: () => ipcRenderer.invoke('admin:relaunch'),
+  createAdminShortcut: (payload) => ipcRenderer.invoke('shortcut:createAdmin', payload),
   onStatus: (cb) => {
     ipcRenderer.on('status', (_e, s) => cb(s));
   },

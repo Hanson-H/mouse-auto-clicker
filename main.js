@@ -4,6 +4,7 @@
 const { app, BrowserWindow, globalShortcut, ipcMain, nativeTheme } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { spawnSync } = require('child_process');
 const koffi = require('koffi');
 
 // ----------------------------------------------------------------------------
@@ -62,6 +63,75 @@ function getCursorPos() {
   const pt = {};
   GetCursorPos(pt);
   return { x: pt.x, y: pt.y };
+}
+
+// ----------------------------------------------------------------------------
+// 管理员权限检测 + 提权重启（解决 UIPI：低权限进程无法向管理员窗口发送输入）
+// ----------------------------------------------------------------------------
+// `net session` 是 Windows 内置命令：普通用户返回非 0 退出码，管理员返回 0
+function isAdmin() {
+  if (process.platform !== 'win32') return false;
+  try {
+    const r = spawnSync('net', ['session'], { stdio: 'ignore' });
+    return r.status === 0;
+  } catch (e) {
+    return false;
+  }
+}
+
+// 以管理员身份重启当前应用（触发 UAC 弹窗）
+function relaunchAsAdmin() {
+  if (process.platform !== 'win32') return;
+  const exe = process.execPath;
+  // 把参数数组拼接成 PowerShell 单引号字符串安全的格式
+  const args = process.argv.slice(1).map((a) => `'${String(a).replace(/'/g, `''`)}'`).join(',');
+  // Start-Process -Verb RunAs 触发 UAC；powershell 进程本身不需要管理员
+  const psCmd = `Start-Process -FilePath "${exe}" -ArgumentList ${args} -Verb RunAs`;
+  spawnSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', psCmd], { stdio: 'ignore' });
+  app.quit();
+}
+
+// 在桌面创建"以管理员身份运行"的快捷方式（双击该快捷方式会自动 UAC 启动）
+function createAdminShortcut(target) {
+  if (process.platform !== 'win32') return { ok: false, message: '仅 Windows 支持' };
+  const exe = process.execPath;
+  // 转义 PowerShell 单引号字符串内的单引号
+  const esc = (s) => String(s).replace(/'/g, `''`);
+  const lnkEsc = esc(target.lnkPath);
+  const exeEsc = esc(exe);
+  const dirEsc = esc(path.dirname(exe));
+
+  // PowerShell 脚本：用 WScript.Shell 创建 .lnk，再修改二进制 LinkFlags 添加 0x2000 (RunAsAdmin)
+  // 这是 Set-RunAsAdmin (PSGallery) 的标准做法，对 Win10/11 有效
+  const psCmd = `
+$ErrorActionPreference = 'Stop'
+$lnkPath = '${lnkEsc}'
+$exePath = '${exeEsc}'
+$workDir = '${dirEsc}'
+
+if (Test-Path $lnkPath) { Remove-Item $lnkPath -Force }
+$ws = New-Object -ComObject WScript.Shell
+$lnk = $ws.CreateShortcut($lnkPath)
+$lnk.TargetPath = $exePath
+$lnk.WorkingDirectory = $workDir
+$lnk.IconLocation = "$exePath,0"
+$lnk.Description = 'Mouse Auto Clicker (Run as Administrator)'
+$lnk.Save()
+
+# 修改 LinkFlags (offset 0x4C) 添加 SLDF_RUNAS_USER (0x2000)
+$bytes = [System.IO.File]::ReadAllBytes($lnkPath)
+$oldFlags = [BitConverter]::ToUInt32($bytes, 0x4C)
+$newFlags = $oldFlags -bor 0x2000
+[Array]::Copy([BitConverter]::GetBytes($newFlags), 0, $bytes, 0x4C, 4)
+[System.IO.File]::WriteAllBytes($lnkPath, $bytes)
+Write-Output 'OK'
+`;
+
+  const r = spawnSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', psCmd], { encoding: 'utf-8' });
+  if (r.status === 0) {
+    return { ok: true, lnkPath: target.lnkPath };
+  }
+  return { ok: false, message: (r.stderr || r.stdout || '未知错误').trim().split('\n').slice(-3).join('\n') };
 }
 
 // ----------------------------------------------------------------------------
@@ -218,6 +288,20 @@ ipcMain.handle('hotkey:set', (_e, { which, accelerator }) => {
 ipcMain.handle('click:start', startClicking);
 ipcMain.handle('click:stop', stopClicking);
 ipcMain.handle('cursor:pos', () => getCursorPos());
+
+// 以管理员身份重启（触发 UAC）；返回 true 表示已发出重启指令
+ipcMain.handle('admin:relaunch', () => { relaunchAsAdmin(); return true; });
+
+// 创建桌面"以管理员身份启动"快捷方式（位置：桌面 / 开始菜单）
+ipcMain.handle('shortcut:createAdmin', (_e, payload) => {
+  const location = (payload && payload.location) || 'desktop'; // desktop | startmenu
+  const name = (payload && payload.name) || '鼠标连点器(管理员)';
+  const baseDir = location === 'startmenu'
+    ? path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs')
+    : app.getPath('desktop');
+  const lnkPath = path.join(baseDir, `${name}.lnk`);
+  return createAdminShortcut({ lnkPath });
+});
 
 // 重置为默认配置（含快捷键），并停止连点
 ipcMain.handle('cfg:reset', () => {
