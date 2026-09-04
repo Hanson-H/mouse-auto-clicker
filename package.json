@@ -36,6 +36,7 @@
     ],
     "win": {
       "icon": "app.ico",
+      "requestedExecutionLevel": "requireAdministrator",
       "target": [
         {
           "target": "nsis",
