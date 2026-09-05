@@ -35,6 +35,7 @@
   --btn-hover-bg: #3a3a3c;
 
   --input-bg: #2c2c2e;
+  --chip-bg: #2c2c2e;
   --ring-idle-border: rgba(235, 235, 245, 0.22);
   --ring-idle-inner: rgba(235, 235, 245, 0.14);
   --status-idle: rgba(235, 235, 245, 0.50);
@@ -80,6 +81,7 @@
   --btn-hover-bg: #e8e8ed;
 
   --input-bg: #ebebed;
+  --chip-bg: #ebebed;
   --ring-idle-border: rgba(60, 60, 67, 0.30);
   --ring-idle-inner: rgba(60, 60, 67, 0.18);
   --status-idle: rgba(60, 60, 67, 0.50);
@@ -115,16 +117,15 @@ body {
   transition: background 0.25s ease, color 0.25s ease;
 }
 
-/* ---------- 卡片（iOS 分组列表材质） ---------- */
-/* 边框用 1px：Windows 下 0.5px 渲染锯齿明显 */
+/* ---------- 卡片（iOS 分组列表材质，无边框，靠底色分层） ---------- */
 .glass-card {
   position: relative;
   background: var(--card-bg);
-  border: 1px solid var(--card-border);
+  border: none;
   border-radius: 12px;
   padding: 14px 16px;
   box-shadow: var(--card-shadow);
-  transition: background 0.25s ease, border-color 0.25s ease;
+  transition: background 0.25s ease;
 }
 
 .glass-card + .glass-card {
@@ -293,7 +294,7 @@ body {
   top: 3px;
   bottom: 3px;
   left: 3px;
-  width: calc(50% - 6px);
+  width: calc(50% - 3px);
   background: var(--accent);
   border-radius: 7px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
@@ -389,7 +390,7 @@ body {
   gap: 8px;
 }
 
-/* 顶栏热键 chip（iOS systemFill 灰胶囊 + 键盘图标，与输入控件同底色族） */
+/* 顶栏热键 chip（iOS systemFill 灰胶囊 + 键盘图标；深色 #2c2c2e / 浅色 #d1d1d6 与页面底拉开） */
 .hotkey-chip {
   display: inline-flex;
   align-items: center;
@@ -397,7 +398,7 @@ body {
   height: 24px;
   padding: 0 12px;
   border-radius: 999px;
-  background: var(--input-bg);
+  background: var(--chip-bg);
   color: var(--text-main);
   font-size: 11.5px;
   font-family: 'Inter', 'MiSans', 'Consolas', monospace;
