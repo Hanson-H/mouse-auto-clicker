@@ -23,6 +23,7 @@
   --accent-bright: #64d2ff;
   --accent-dim: #0066d6;
   --accent-soft: rgba(10, 132, 255, 0.14);
+  --accent-soft-hover: rgba(10, 132, 255, 0.24);
 
   --status-run: #30d158;
   --status-run-dim: rgba(48, 209, 88, 0.40);
@@ -37,6 +38,11 @@
   --ring-idle-border: rgba(235, 235, 245, 0.22);
   --ring-idle-inner: rgba(235, 235, 245, 0.14);
   --status-idle: rgba(235, 235, 245, 0.50);
+
+  --seg-track: rgba(118, 118, 128, 0.24);
+  --seg-thumb: #636366;
+  --seg-text: rgba(235, 235, 245, 0.55);
+  --seg-text-on: #ffffff;
 
   --scroll-thumb: rgba(235, 235, 245, 0.18);
   --scroll-thumb-hover: rgba(235, 235, 245, 0.32);
@@ -62,6 +68,7 @@
   --accent-bright: #007aff;
   --accent-dim: #0062cc;
   --accent-soft: rgba(0, 122, 255, 0.09);
+  --accent-soft-hover: rgba(0, 122, 255, 0.16);
 
   --status-run: #34c759;
   --status-run-dim: rgba(52, 199, 89, 0.35);
@@ -76,6 +83,11 @@
   --ring-idle-border: rgba(60, 60, 67, 0.30);
   --ring-idle-inner: rgba(60, 60, 67, 0.18);
   --status-idle: rgba(60, 60, 67, 0.50);
+
+  --seg-track: rgba(118, 118, 128, 0.12);
+  --seg-thumb: #ffffff;
+  --seg-text: rgba(60, 60, 67, 0.60);
+  --seg-text-on: #000000;
 
   --scroll-thumb: rgba(60, 60, 67, 0.22);
   --scroll-thumb-hover: rgba(60, 60, 67, 0.38);
@@ -104,10 +116,11 @@ body {
 }
 
 /* ---------- 卡片（iOS 分组列表材质） ---------- */
+/* 边框用 1px：Windows 下 0.5px 渲染锯齿明显 */
 .glass-card {
   position: relative;
   background: var(--card-bg);
-  border: 0.5px solid var(--card-border);
+  border: 1px solid var(--card-border);
   border-radius: 12px;
   padding: 14px 16px;
   box-shadow: var(--card-shadow);
@@ -118,8 +131,10 @@ body {
   margin-top: 10px;
 }
 
+/* 禁用态：降低不透明度 + 去饱和，保持内容可读 */
 .glass-card.disabled {
-  opacity: 0.38;
+  opacity: 0.55;
+  filter: grayscale(0.35);
   pointer-events: none;
 }
 
@@ -142,12 +157,13 @@ body {
   background: var(--accent);
 }
 
-/* ---------- 状态卡（横排紧凑条，Apple Music 播放条式） ---------- */
+/* ---------- 状态卡（方案 B 整体居中，Apple Music 歌曲信息式，纯展示） ---------- */
 .status-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 13px 16px;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 16px;
 }
 
 .st-left {
@@ -203,39 +219,90 @@ body {
   color: var(--status-run);
 }
 
+.st-sep {
+  color: var(--text-hint);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
 .st-sub {
-  font-size: 10.5px;
-  margin-top: 1px;
+  font-size: 12.5px;
   letter-spacing: 0.1px;
   color: var(--text-hint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* ---------- 启停按钮（iOS 胶囊） ---------- */
-.toggle-btn {
-  height: 36px;
-  padding: 0 26px;
-  flex-shrink: 0;
-  font-size: 13.5px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-indent: 1px;
-  border-radius: 18px;
+/* ---------- 通用按钮（iOS tinted 无框，与快捷键按钮同族，覆盖 Naive UI 默认） ---------- */
+.n-button {
+  border-radius: 9px;
+  background: var(--accent-soft);
   border: none;
-  color: #ffffff;
-  background: var(--accent);
+  color: var(--accent);
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.n-button:not(.n-button--disabled):not(.n-button--quaternary):hover {
+  background: var(--accent-soft-hover);
+}
+
+/* 重置按钮保持轻量文字风 */
+.n-button--quaternary {
+  background: transparent;
+}
+
+/* radio 选项组：弃用 Naive radio，纯自定义 Segmented（iOS 原生灰槽滑块，0.22s 平移动画） */
+.seg {
+  position: relative;
+  display: inline-flex;
+  background: var(--seg-track);
+  border-radius: 9px;
+  padding: 2px;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
+  height: 28px;
 }
 
-.toggle-btn:active {
-  transform: scale(0.96);
+.seg.dis {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
-.toggle-btn.running {
-  background: var(--btn-stop);
+.seg .thumb {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc(50% - 4px);
+  background: var(--seg-thumb);
+  border-radius: 7px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  transition: transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1);
+  pointer-events: none;
 }
 
-/* ---------- 快捷键按钮 ---------- */
+.seg.r2 .thumb {
+  transform: translateX(100%);
+}
+
+.seg .op {
+  position: relative;
+  z-index: 1;
+  padding: 3px 14px;
+  font-size: 12px;
+  line-height: 20px;
+  border-radius: 7px;
+  color: var(--seg-text);
+  transition: color 0.2s;
+}
+
+.seg .op.sel {
+  font-weight: 600;
+  color: var(--seg-text-on);
+}
+
+/* ---------- 快捷键按钮（iOS tinted 无框） ---------- */
 .hotkey-btn {
   min-width: 120px;
   height: 34px;
@@ -246,14 +313,13 @@ body {
   font-family: 'Inter', 'MiSans', 'Consolas', monospace;
   color: var(--accent);
   background: var(--accent-soft);
-  border: 0.5px solid var(--accent-dim);
+  border: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s ease;
 }
 
 .hotkey-btn:hover {
-  background: rgba(10, 132, 255, 0.20);
-  border-color: var(--accent);
+  background: var(--accent-soft-hover);
 }
 
 .hotkey-btn.capturing {
@@ -279,20 +345,21 @@ body {
 .app-title {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 9px;
   font-size: 15px;
   font-weight: 700;
+  letter-spacing: -0.2px;
 }
 
 .app-title span {
-  letter-spacing: -0.2px;
+  letter-spacing: 0;
   color: var(--text-title);
 }
 
 /* 标题图标：Phosphor cursor-click，颜色随主题 accent 变化 */
 .app-icon {
-  width: 19px;
-  height: 19px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   fill: var(--accent);
 }
@@ -309,12 +376,11 @@ body {
   color: var(--accent-bright);
   padding: 3px 10px;
   border-radius: 999px;
-  border: 0.5px solid var(--accent-dim);
   background: var(--accent-soft);
   white-space: nowrap;
 }
 
-/* 自动按键徽章（键盘模式下显示固定 F 键） */
+/* 自动按键徽章（键盘模式下显示固定 F 键，iOS tinted 无框） */
 .key-badge {
   font-size: 13.5px;
   font-family: 'Inter', 'MiSans', 'Consolas', monospace;
@@ -322,31 +388,33 @@ body {
   color: var(--accent-bright);
   padding: 3px 15px;
   border-radius: 8px;
-  border: 1px solid var(--accent-dim);
   background: var(--accent-soft);
   white-space: nowrap;
 }
 
-/* 主题切换按钮 */
+/* 主题切换按钮（Lucide sun/moon 线条图标，iOS 圆形钮） */
 .theme-toggle {
   width: 30px;
   height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
-  font-size: 14px;
-  line-height: 1;
+  border-radius: 50%;
   color: var(--text-muted);
   background: transparent;
-  border: 0.5px solid var(--card-border);
+  border: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.theme-toggle svg {
+  width: 17px;
+  height: 17px;
 }
 
 .theme-toggle:hover {
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--text-main);
+  background: var(--btn-bg);
 }
 
 /* ---------- 行布局 ---------- */
@@ -451,7 +519,7 @@ body {
   .hotkey-btn.capturing {
     animation: none;
   }
-  .toggle-btn:active {
-    transform: none;
+  .seg .thumb {
+    transition: none;
   }
 }

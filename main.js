@@ -114,10 +114,11 @@ let clickCount = 0;
 let timer = null;
 let mainWindow = null;
 let nextTickAt = 0; // 下一次点击的绝对时间戳（ms），用于消除 setTimeout 累积漂移
+let runStartedAt = 0; // 本次运行开始时间戳（ms），0 表示未运行
 
 function pushStatus() {
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('status', { running, clickCount });
+    mainWindow.webContents.send('status', { running, clickCount, runStartedAt });
   }
 }
 
@@ -154,6 +155,7 @@ function startClicking() {
   }
   running = true;
   saveConfig();
+  runStartedAt = Date.now();
   nextTickAt = Date.now(); // 立即点第一下
   clickLoop();
   pushStatus();
@@ -161,6 +163,7 @@ function startClicking() {
 
 function stopClicking() {
   running = false;
+  runStartedAt = 0;
   if (timer) { clearTimeout(timer); timer = null; }
   saveConfig();
   pushStatus();
@@ -197,7 +200,7 @@ function registerHotkeys() {
 // ----------------------------------------------------------------------------
 // IPC
 // ----------------------------------------------------------------------------
-ipcMain.handle('cfg:get', () => ({ ...cfg, running, clickCount }));
+ipcMain.handle('cfg:get', () => ({ ...cfg, running, clickCount, runStartedAt }));
 
 ipcMain.handle('cfg:save', (_e, patch) => {
   Object.assign(cfg, patch || {});

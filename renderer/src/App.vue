@@ -10,23 +10,26 @@
         <div class="header-right">
           <div class="hotkey-badge">{{ hotkeyBadgeText }}</div>
           <button class="theme-toggle" :title="theme === 'light' ? '切换到暗色' : '切换到浅色'" @click="toggleTheme">
-            {{ theme === 'light' ? '☀' : '☾' }}
+            <svg v-if="theme === 'light'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2"/><path d="M12 20v2"/>
+              <path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>
+              <path d="M2 12h2"/><path d="M20 12h2"/>
+              <path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+            </svg>
           </button>
         </div>
       </header>
 
-      <!-- 状态卡（横排紧凑条） -->
+      <!-- 状态卡（方案 B 整体居中，纯展示；启停由热键控制） -->
       <section class="glass-card status-card" :class="{ running }">
-        <div class="st-left">
-          <div class="st-ring"></div>
-          <div>
-            <div class="st-text">{{ running ? '运行中' : '已停止' }}</div>
-            <div class="st-sub">{{ cfg.simType === 'keyboard' ? '键盘' : '鼠标' }} · 每 {{ cfg.interval_ms }}ms</div>
-          </div>
-        </div>
-        <button class="toggle-btn" :class="{ running }" @click="toggleClick">
-          {{ running ? '停止' : '开始' }}
-        </button>
+        <div class="st-ring"></div>
+        <div class="st-text">{{ running ? '运行中' : '已停止' }}</div>
+        <span class="st-sep">·</span>
+        <div class="st-sub">{{ cfg.simType === 'keyboard' ? '键盘' : '鼠标' }} · 每 {{ cfg.interval_ms }}ms</div>
       </section>
 
       <!-- 点击间隔 -->
@@ -49,10 +52,11 @@
       <!-- 点击位置（键盘输入模式下整卡禁用） -->
       <section class="glass-card" :class="{ disabled: cfg.simType !== 'mouse' }">
         <div class="card-title">点击位置</div>
-        <n-radio-group v-model:value="cfg.mode" :disabled="cfg.simType !== 'mouse'" @update:value="saveCfg">
-          <n-radio-button value="follow">跟随鼠标</n-radio-button>
-          <n-radio-button value="fixed">固定位置</n-radio-button>
-        </n-radio-group>
+        <div class="seg" :class="{ dis: cfg.simType !== 'mouse', r2: cfg.mode === 'fixed' }" @click="onSeg('mode', $event)">
+          <div class="thumb"></div>
+          <span class="op" data-v="follow" :class="{ sel: cfg.mode === 'follow' }">跟随鼠标</span>
+          <span class="op" data-v="fixed"  :class="{ sel: cfg.mode === 'fixed' }">固定位置</span>
+        </div>
         <div class="row" style="margin-top: 12px" :class="{ disabled: cfg.mode !== 'fixed' }">
           <span class="label">X</span>
           <n-input-number v-model:value="cfg.pos_x" :min="0" size="small" style="width: 96px" :disabled="cfg.simType !== 'mouse' || cfg.mode !== 'fixed'" @update:value="saveCfg" />
@@ -72,27 +76,30 @@
         <div class="card-title">点击方式</div>
         <div class="row spread">
           <span class="label">输入类型</span>
-          <n-radio-group v-model:value="cfg.simType" size="small" @update:value="saveCfg">
-            <n-radio-button value="mouse">鼠标</n-radio-button>
-            <n-radio-button value="keyboard">键盘</n-radio-button>
-          </n-radio-group>
+          <div class="seg" :class="{ r2: cfg.simType === 'keyboard' }" @click="onSeg('simType', $event)">
+            <div class="thumb"></div>
+            <span class="op" data-v="mouse"    :class="{ sel: cfg.simType === 'mouse' }">鼠标</span>
+            <span class="op" data-v="keyboard" :class="{ sel: cfg.simType === 'keyboard' }">键盘</span>
+          </div>
         </div>
 
         <!-- 鼠标分支 -->
         <template v-if="cfg.simType === 'mouse'">
           <div class="row spread">
             <span class="label">鼠标按键</span>
-            <n-radio-group v-model:value="cfg.button" size="small" @update:value="saveCfg">
-              <n-radio-button value="left">左键</n-radio-button>
-              <n-radio-button value="right">右键</n-radio-button>
-            </n-radio-group>
+            <div class="seg" :class="{ r2: cfg.button === 'right' }" @click="onSeg('button', $event)">
+              <div class="thumb"></div>
+              <span class="op" data-v="left"  :class="{ sel: cfg.button === 'left' }">左键</span>
+              <span class="op" data-v="right" :class="{ sel: cfg.button === 'right' }">右键</span>
+            </div>
           </div>
           <div class="row spread">
             <span class="label">点击类型</span>
-            <n-radio-group v-model:value="clickType" size="small" @update:value="saveCfg">
-              <n-radio-button value="single">单击</n-radio-button>
-              <n-radio-button value="double">双击</n-radio-button>
-            </n-radio-group>
+            <div class="seg" :class="{ r2: clickType === 'double' }" @click="onSeg('clickType', $event)">
+              <div class="thumb"></div>
+              <span class="op" data-v="single" :class="{ sel: clickType === 'single' }">单击</span>
+              <span class="op" data-v="double" :class="{ sel: clickType === 'double' }">双击</span>
+            </div>
           </div>
         </template>
 
@@ -141,8 +148,6 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import {
   NConfigProvider,
   NInputNumber,
-  NRadioGroup,
-  NRadioButton,
   NButton,
   darkTheme,
   lightTheme,
@@ -199,10 +204,50 @@ const cfg = reactive({
 });
 const running = ref(false);
 const clickCount = ref(0);
+const runMs = ref(0); // 运行时长（ms）：运行中实时累计，停止后定格为上次时长
+let runStartedAt = 0;
+let runTimer = null;
 const pickCounting = ref(false);
 const pickBtnText = ref('⏱ 3 秒后拾取');
 const capturing = ref(null); // 'start' | 'stop' | null
 const hotkeyTip = ref('点击右侧按键后，直接按下新快捷键即可更换；两个键设为相同时按一下启动、再按停止');
+
+function fmtDur(ms) {
+  const t = Math.floor(ms / 1000);
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = t % 60;
+  const mm = String(m).padStart(2, '0');
+  const ss = String(s).padStart(2, '0');
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+// 自定义 Segmented 控件：点击 .op 切换 cfg 字段，滑块由 .seg .r2 CSS 自动平移
+function onSeg(field, e) {
+  const t = e.target.closest('.op');
+  if (!t) return;
+  const v = t.getAttribute('data-v');
+  if (field === 'simType') cfg.simType = v;
+  else if (field === 'mode') cfg.mode = v;
+  else if (field === 'button') cfg.button = v;
+  else if (field === 'clickType') cfg.double = v === 'double';
+  saveCfg();
+}
+
+function tickRunMs() {
+  if (runStartedAt) runMs.value = Date.now() - runStartedAt;
+}
+
+function applyRunState(isRunning, startedAt) {
+  if (isRunning) {
+    runStartedAt = startedAt || Date.now();
+    if (!runTimer) runTimer = setInterval(tickRunMs, 1000);
+    tickRunMs();
+  } else {
+    if (runTimer) { clearInterval(runTimer); runTimer = null; }
+    runStartedAt = 0; // runMs 保留定格为上次时长
+  }
+}
 
 const clickType = computed({
   get: () => (cfg.double ? 'double' : 'single'),
@@ -344,16 +389,19 @@ onMounted(async () => {
   applyTheme(c.theme === 'light' ? 'light' : 'dark');
   running.value = !!c.running;
   clickCount.value = c.clickCount || 0;
+  applyRunState(!!c.running, c.runStartedAt);
 
   window.addEventListener('keydown', onGlobalKeydown);
   bridge.onStatus((s) => {
     running.value = s.running;
     clickCount.value = s.clickCount;
+    applyRunState(!!s.running, s.runStartedAt);
   });
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onGlobalKeydown);
+  if (runTimer) { clearInterval(runTimer); runTimer = null; }
 });
 </script>
 
