@@ -1,86 +1,84 @@
 /* ============================================================================
-   主题变量：默认暗色，:root[data-theme="light"] 覆盖为浅色
+   iOS 风格主题（Apple HIG 系统色板）
+   浅色：#F2F2F7 分组背景 + 白卡片 / 深色：#000000 纯黑 + #1C1C1E 卡片
+   主色 systemBlue，运行态 systemGreen
    ========================================================================== */
 :root {
   color-scheme: dark;
-  --bg-grad-1: rgba(34, 211, 238, 0.10);
-  --bg-grad-2: rgba(99, 102, 241, 0.08);
-  --bg-base-1: #10131d;
-  --bg-base-2: #0b0d14;
-  --bg-base-3: #08090f;
+  --bg-base: #000000;
 
-  --text-main: #dbe4f0;
-  --text-title: #e2e8f0;
-  --text-title-grad-to: #67e8f9;
-  --text-muted: #9fb2cc;
-  --text-label: #94a3b8;
-  --text-hint: #5b6b82;
-  --text-footer: #47566d;
-  --text-unit: #64748b;
-  --text-count: #64748b;
+  --text-main: rgba(235, 235, 245, 0.92);
+  --text-title: #ffffff;
+  --text-muted: rgba(235, 235, 245, 0.60);
+  --text-label: rgba(235, 235, 245, 0.65);
+  --text-hint: rgba(235, 235, 245, 0.38);
+  --text-footer: rgba(235, 235, 245, 0.30);
+  --text-unit: rgba(235, 235, 245, 0.40);
 
-  --card-bg: rgba(255, 255, 255, 0.030);
-  --card-border: rgba(255, 255, 255, 0.075);
-  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --card-bg: #1c1c1e;
+  --card-border: rgba(255, 255, 255, 0.07);
+  --card-shadow: none;
 
-  --accent: #22d3ee;
-  --accent-bright: #67e8f9;
-  --accent-dim: #06b6d4;
-  --accent-grad: linear-gradient(135deg, #22d3ee, #38bdf8);
+  --accent: #0a84ff;
+  --accent-bright: #64d2ff;
+  --accent-dim: #0066d6;
+  --accent-soft: rgba(10, 132, 255, 0.14);
 
-  --btn-bg: rgba(255, 255, 255, 0.05);
-  --btn-border: rgba(255, 255, 255, 0.12);
-  --btn-text: #cbd5e1;
-  --btn-hover-bg: rgba(255, 255, 255, 0.09);
+  --status-run: #30d158;
+  --status-run-dim: rgba(48, 209, 88, 0.40);
+  --btn-stop: #48484a;
 
-  --input-bg: rgba(255, 255, 255, 0.04);
-  --ring-idle-border: rgba(255, 255, 255, 0.10);
-  --dot-idle: #4b5563;
-  --status-idle: #8a97ab;
+  --btn-bg: #2c2c2e;
+  --btn-border: rgba(255, 255, 255, 0.10);
+  --btn-text: #ffffff;
+  --btn-hover-bg: #3a3a3c;
 
-  --scroll-thumb: rgba(34, 211, 238, 0.18);
-  --scroll-thumb-hover: rgba(34, 211, 238, 0.38);
+  --input-bg: #2c2c2e;
+  --ring-idle-border: rgba(235, 235, 245, 0.22);
+  --ring-idle-inner: rgba(235, 235, 245, 0.14);
+  --status-idle: rgba(235, 235, 245, 0.50);
+
+  --scroll-thumb: rgba(235, 235, 245, 0.18);
+  --scroll-thumb-hover: rgba(235, 235, 245, 0.32);
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg-grad-1: rgba(34, 211, 238, 0.16);
-  --bg-grad-2: rgba(99, 102, 241, 0.10);
-  --bg-base-1: #f4f7fb;
-  --bg-base-2: #eef2f8;
-  --bg-base-3: #e7edf5;
+  --bg-base: #f2f2f7;
 
-  --text-main: #1e293b;
-  --text-title: #0f172a;
-  --text-title-grad-to: #0891b2;
-  --text-muted: #475569;
-  --text-label: #526079;
-  --text-hint: #64748b;
-  --text-footer: #94a3b8;
-  --text-unit: #7c8aa0;
-  --text-count: #7c8aa0;
+  --text-main: rgba(0, 0, 0, 0.85);
+  --text-title: #000000;
+  --text-muted: rgba(60, 60, 67, 0.60);
+  --text-label: rgba(60, 60, 67, 0.75);
+  --text-hint: rgba(60, 60, 67, 0.42);
+  --text-footer: rgba(60, 60, 67, 0.35);
+  --text-unit: rgba(60, 60, 67, 0.45);
 
-  --card-bg: rgba(255, 255, 255, 0.72);
-  --card-border: rgba(148, 163, 184, 0.22);
-  --card-shadow: 0 6px 20px rgba(100, 116, 139, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.06);
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 
-  --accent: #0891b2;
-  --accent-bright: #06b6d4;
-  --accent-dim: #0e7490;
-  --accent-grad: linear-gradient(135deg, #06b6d4, #3b82f6);
+  --accent: #007aff;
+  --accent-bright: #007aff;
+  --accent-dim: #0062cc;
+  --accent-soft: rgba(0, 122, 255, 0.09);
 
-  --btn-bg: rgba(255, 255, 255, 0.85);
-  --btn-border: rgba(100, 116, 139, 0.28);
-  --btn-text: #334155;
-  --btn-hover-bg: rgba(255, 255, 255, 1);
+  --status-run: #34c759;
+  --status-run-dim: rgba(52, 199, 89, 0.35);
+  --btn-stop: #3a3a3c;
 
-  --input-bg: rgba(255, 255, 255, 0.85);
-  --ring-idle-border: rgba(100, 116, 139, 0.22);
-  --dot-idle: #cbd5e1;
-  --status-idle: #64748b;
+  --btn-bg: #f2f2f7;
+  --btn-border: rgba(0, 0, 0, 0.08);
+  --btn-text: #000000;
+  --btn-hover-bg: #e8e8ed;
 
-  --scroll-thumb: rgba(8, 145, 178, 0.25);
-  --scroll-thumb-hover: rgba(8, 145, 178, 0.45);
+  --input-bg: #f2f2f7;
+  --ring-idle-border: rgba(60, 60, 67, 0.30);
+  --ring-idle-inner: rgba(60, 60, 67, 0.18);
+  --status-idle: rgba(60, 60, 67, 0.50);
+
+  --scroll-thumb: rgba(60, 60, 67, 0.22);
+  --scroll-thumb-hover: rgba(60, 60, 67, 0.38);
 }
 
 * {
@@ -96,178 +94,172 @@ body,
 }
 
 body {
-  font-family: 'MiSans', -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  font-family: 'Inter', 'MiSans', -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
   font-size: 14px;
+  font-variant-numeric: tabular-nums;
   color: var(--text-main);
   user-select: none;
-  background:
-    radial-gradient(900px 500px at 15% -5%, var(--bg-grad-1), transparent 60%),
-    radial-gradient(700px 420px at 95% 8%, var(--bg-grad-2), transparent 55%),
-    linear-gradient(175deg, var(--bg-base-1) 0%, var(--bg-base-2) 55%, var(--bg-base-3) 100%);
-  background-attachment: fixed;
-  transition: background 0.3s ease, color 0.3s ease;
+  background: var(--bg-base);
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
-/* ---------- 玻璃卡片 ---------- */
+/* ---------- 卡片（iOS 分组列表材质） ---------- */
 .glass-card {
   position: relative;
   background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 16px 18px;
-  backdrop-filter: blur(6px);
+  border: 0.5px solid var(--card-border);
+  border-radius: 12px;
+  padding: 14px 16px;
   box-shadow: var(--card-shadow);
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .glass-card + .glass-card {
-  margin-top: 12px;
+  margin-top: 10px;
+}
+
+.glass-card.disabled {
+  opacity: 0.38;
+  pointer-events: none;
 }
 
 .card-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 7px;
+  font-size: 11.5px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.2px;
   color: var(--text-muted);
-  margin-bottom: 14px;
+  margin-bottom: 11px;
 }
 
 .card-title::before {
   content: '';
-  width: 3px;
-  height: 13px;
+  width: 2.5px;
+  height: 11px;
   border-radius: 2px;
-  background: linear-gradient(180deg, var(--accent), #6366f1);
-  box-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+  background: var(--accent);
 }
 
-/* ---------- 状态卡 ---------- */
+/* ---------- 状态卡（横排紧凑条，Apple Music 播放条式） ---------- */
 .status-card {
-  text-align: center;
-  padding: 22px 18px 18px;
-  overflow: hidden;
-}
-
-.status-card.running {
-  border-color: rgba(34, 211, 238, 0.45);
-  box-shadow: 0 0 28px rgba(34, 211, 238, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.status-ring {
-  width: 76px;
-  height: 76px;
-  margin: 0 auto 12px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: 2px solid var(--ring-idle-border);
-  transition: all 0.35s ease;
+  justify-content: space-between;
+  padding: 13px 16px;
 }
 
-.status-card.running .status-ring {
-  border-color: rgba(34, 211, 238, 0.85);
-  box-shadow: 0 0 24px rgba(34, 211, 238, 0.45), inset 0 0 14px rgba(34, 211, 238, 0.18);
-  animation: pulse 1.6s ease-in-out infinite;
+.st-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
 
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.30), inset 0 0 10px rgba(34, 211, 238, 0.12); }
-  50%      { box-shadow: 0 0 34px rgba(34, 211, 238, 0.60), inset 0 0 18px rgba(34, 211, 238, 0.25); }
-}
-
-.status-dot {
-  width: 14px;
-  height: 14px;
+/* 双层同心环（Apple Watch 计时器造型）：外实环 + 内虚环 */
+.st-ring {
+  width: 34px;
+  height: 34px;
+  position: relative;
+  flex-shrink: 0;
   border-radius: 50%;
-  background: var(--dot-idle);
-  transition: background 0.3s;
+  border: 3px solid var(--ring-idle-border);
+  transition: border-color 0.3s ease;
 }
 
-.status-card.running .status-dot {
-  background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
+.st-ring::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 2.5px solid var(--ring-idle-inner);
+  transition: border-color 0.3s ease;
 }
 
-.status-text {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  color: var(--status-idle);
+.status-card.running .st-ring {
+  border-color: var(--status-run);
+  animation: st-glow 1.8s ease-in-out infinite;
 }
 
-.status-card.running .status-text {
-  color: var(--accent-bright);
-  text-shadow: 0 0 12px rgba(34, 211, 238, 0.5);
+.status-card.running .st-ring::before {
+  border-color: var(--status-run-dim);
 }
 
-.status-count {
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--text-count);
-  font-variant-numeric: tabular-nums;
+@keyframes st-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(52, 199, 89, 0.35); }
+  50%      { box-shadow: 0 0 20px rgba(52, 199, 89, 0.75); }
 }
 
-/* ---------- 主开关按钮 ---------- */
-.toggle-btn {
-  margin-top: 14px;
-  width: 100%;
-  height: 44px;
+.st-text {
   font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 6px;
-  text-indent: 6px;
-  border-radius: 12px;
-  color: var(--btn-text);
-  background: var(--btn-bg);
-  border: 1px solid var(--btn-border);
-  cursor: pointer;
-  transition: all 0.25s;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--status-idle);
+  transition: color 0.3s;
 }
 
-.toggle-btn:hover {
-  background: var(--btn-hover-bg);
+.status-card.running .st-text {
+  color: var(--status-run);
+}
+
+.st-sub {
+  font-size: 10.5px;
+  margin-top: 1px;
+  letter-spacing: 0.1px;
+  color: var(--text-hint);
+}
+
+/* ---------- 启停按钮（iOS 胶囊） ---------- */
+.toggle-btn {
+  height: 36px;
+  padding: 0 26px;
+  flex-shrink: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-indent: 1px;
+  border-radius: 18px;
+  border: none;
+  color: #ffffff;
+  background: var(--accent);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.toggle-btn:active {
+  transform: scale(0.96);
 }
 
 .toggle-btn.running {
-  color: #06181d;
-  background: var(--accent-grad);
-  border: none;
-  box-shadow: 0 4px 18px rgba(34, 211, 238, 0.35);
-}
-
-.toggle-btn.running:hover {
-  box-shadow: 0 6px 26px rgba(34, 211, 238, 0.55);
+  background: var(--btn-stop);
 }
 
 /* ---------- 快捷键按钮 ---------- */
 .hotkey-btn {
   min-width: 120px;
-  height: 36px;
+  height: 34px;
   padding: 0 16px;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 9px;
+  font-size: 13px;
   font-weight: 600;
-  font-family: 'MiSans', 'Cascadia Code', 'Consolas', monospace;
-  color: var(--accent-bright);
-  background: rgba(34, 211, 238, 0.06);
-  border: 1px solid rgba(34, 211, 238, 0.25);
+  font-family: 'Inter', 'MiSans', 'Consolas', monospace;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 0.5px solid var(--accent-dim);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .hotkey-btn:hover {
-  background: rgba(34, 211, 238, 0.12);
-  border-color: rgba(34, 211, 238, 0.5);
+  background: rgba(10, 132, 255, 0.20);
+  border-color: var(--accent);
 }
 
 .hotkey-btn.capturing {
-  color: #fbbf24;
-  border-color: rgba(251, 191, 36, 0.6);
-  background: rgba(251, 191, 36, 0.08);
+  color: #ff9500;
+  border-color: rgba(255, 149, 0, 0.55);
+  background: rgba(255, 149, 0, 0.10);
   animation: blink 1s ease-in-out infinite;
 }
 
@@ -281,29 +273,26 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 4px 14px;
+  padding: 16px 4px 12px;
 }
 
 .app-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 17px;
-  font-weight: 800;
+  gap: 7px;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .app-title span {
-  letter-spacing: 1px;
-  background: linear-gradient(90deg, var(--text-title), var(--text-title-grad-to));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.2px;
+  color: var(--text-title);
 }
 
-/* 标题图标：Phosphor cursor-click（实心箭头+放射线），颜色随主题 accent 变化 */
+/* 标题图标：Phosphor cursor-click，颜色随主题 accent 变化 */
 .app-icon {
-  width: 20px;
-  height: 20px;
+  width: 19px;
+  height: 19px;
   flex-shrink: 0;
   fill: var(--accent);
 }
@@ -315,28 +304,26 @@ body {
 }
 
 .hotkey-badge {
-  font-size: 11px;
-  font-family: 'MiSans', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 10.5px;
+  font-family: 'Inter', 'MiSans', 'Consolas', monospace;
   color: var(--accent-bright);
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(34, 211, 238, 0.35);
-  background: rgba(34, 211, 238, 0.07);
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.15);
+  border: 0.5px solid var(--accent-dim);
+  background: var(--accent-soft);
   white-space: nowrap;
 }
 
-/* 自动按键徽章（键盘模式下显示固定 f 键） */
+/* 自动按键徽章（键盘模式下显示固定 F 键） */
 .key-badge {
-  font-size: 13px;
-  font-family: 'MiSans', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 13.5px;
+  font-family: 'Inter', 'MiSans', 'Consolas', monospace;
   font-weight: 700;
   color: var(--accent-bright);
-  padding: 4px 14px;
+  padding: 3px 15px;
   border-radius: 8px;
-  border: 1px solid rgba(34, 211, 238, 0.40);
-  background: rgba(34, 211, 238, 0.10);
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.20);
+  border: 1px solid var(--accent-dim);
+  background: var(--accent-soft);
   white-space: nowrap;
 }
 
@@ -348,19 +335,18 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1;
   color: var(--text-muted);
   background: transparent;
-  border: 1px solid var(--card-border);
+  border: 0.5px solid var(--card-border);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .theme-toggle:hover {
-  color: var(--accent-bright);
-  border-color: rgba(34, 211, 238, 0.5);
-  background: rgba(34, 211, 238, 0.08);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 /* ---------- 行布局 ---------- */
@@ -371,7 +357,7 @@ body {
 }
 
 .row + .row {
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .row.spread {
@@ -380,6 +366,7 @@ body {
 
 .row .label {
   font-size: 13px;
+  letter-spacing: -0.1px;
   color: var(--text-label);
 }
 
@@ -389,15 +376,16 @@ body {
 }
 
 .unit {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-unit);
   white-space: nowrap;
 }
 
 .hint {
-  margin-top: 12px;
-  font-size: 12px;
-  line-height: 1.6;
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.55;
+  letter-spacing: 0.1px;
   color: var(--text-hint);
 }
 
@@ -408,9 +396,10 @@ body {
   color: var(--text-footer);
 }
 
-/* Naive UI 主题适配：数字输入透明底 */
+/* Naive UI 主题适配：数字输入 */
 .n-input-number {
   background: var(--input-bg);
+  border-radius: 8px;
 }
 
 /* ---------- 重置按钮行 ---------- */
@@ -427,10 +416,10 @@ body {
 }
 
 .reset-row .n-button:hover {
-  color: var(--accent-bright);
+  color: var(--accent);
 }
 
-/* ---------- 滚动条美化 ---------- */
+/* ---------- 滚动条 ---------- */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -454,4 +443,15 @@ body {
 
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* ---------- 无障碍：减弱动效 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .status-card.running .st-ring,
+  .hotkey-btn.capturing {
+    animation: none;
+  }
+  .toggle-btn:active {
+    transform: none;
+  }
 }

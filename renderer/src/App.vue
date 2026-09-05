@@ -15,13 +15,17 @@
         </div>
       </header>
 
-      <!-- 状态卡 -->
+      <!-- 状态卡（横排紧凑条） -->
       <section class="glass-card status-card" :class="{ running }">
-        <div class="status-ring"><div class="status-dot"></div></div>
-        <div class="status-text">{{ running ? '运行中' : '已停止' }}</div>
-        <div class="status-count">累计点击 {{ clickCount }} 次</div>
+        <div class="st-left">
+          <div class="st-ring"></div>
+          <div>
+            <div class="st-text">{{ running ? '运行中' : '已停止' }}</div>
+            <div class="st-sub">{{ cfg.simType === 'keyboard' ? '键盘' : '鼠标' }} · 每 {{ cfg.interval_ms }}ms</div>
+          </div>
+        </div>
         <button class="toggle-btn" :class="{ running }" @click="toggleClick">
-          {{ running ? '停止连点' : '开始连点' }}
+          {{ running ? '停止' : '开始' }}
         </button>
       </section>
 
@@ -42,7 +46,7 @@
         <p class="hint">每次点击之间的等待时间，最小 10 ms</p>
       </section>
 
-      <!-- 点击位置 -->
+      <!-- 点击位置（键盘输入模式下整卡禁用） -->
       <section class="glass-card" :class="{ disabled: cfg.simType !== 'mouse' }">
         <div class="card-title">点击位置</div>
         <n-radio-group v-model:value="cfg.mode" :disabled="cfg.simType !== 'mouse'" @update:value="saveCfg">
@@ -51,15 +55,16 @@
         </n-radio-group>
         <div class="row" style="margin-top: 12px" :class="{ disabled: cfg.mode !== 'fixed' }">
           <span class="label">X</span>
-          <n-input-number v-model:value="cfg.pos_x" :min="0" size="small" style="width: 96px" :disabled="cfg.mode !== 'fixed'" @update:value="saveCfg" />
+          <n-input-number v-model:value="cfg.pos_x" :min="0" size="small" style="width: 96px" :disabled="cfg.simType !== 'mouse' || cfg.mode !== 'fixed'" @update:value="saveCfg" />
           <span class="label">Y</span>
-          <n-input-number v-model:value="cfg.pos_y" :min="0" size="small" style="width: 96px" :disabled="cfg.mode !== 'fixed'" @update:value="saveCfg" />
+          <n-input-number v-model:value="cfg.pos_y" :min="0" size="small" style="width: 96px" :disabled="cfg.simType !== 'mouse' || cfg.mode !== 'fixed'" @update:value="saveCfg" />
         </div>
         <div class="row" :class="{ disabled: cfg.mode !== 'fixed' }">
-          <n-button size="small" :disabled="cfg.mode !== 'fixed' || pickCounting" @click="startPick">
+          <n-button size="small" :disabled="cfg.simType !== 'mouse' || cfg.mode !== 'fixed' || pickCounting" @click="startPick">
             {{ pickBtnText }}
           </n-button>
         </div>
+        <p v-if="cfg.simType !== 'mouse'" class="hint">键盘输入模式下整卡禁用，不可修改</p>
       </section>
 
       <!-- 点击方式 -->
@@ -150,21 +155,21 @@ const bridge = window.api;
 const theme = ref('dark');
 const themeOverrides = computed(() => ({
   common: {
-    primaryColor: theme.value === 'light' ? '#0891b2' : '#22d3ee',
-    primaryColorHover: theme.value === 'light' ? '#06b6d4' : '#67e8f9',
-    primaryColorPressed: theme.value === 'light' ? '#0e7490' : '#06b6d4',
-    primaryColorSuppl: theme.value === 'light' ? '#0891b2' : '#22d3ee',
-    borderRadius: '10px',
+    primaryColor: theme.value === 'light' ? '#007aff' : '#0a84ff',
+    primaryColorHover: theme.value === 'light' ? '#1a80ff' : '#409cff',
+    primaryColorPressed: theme.value === 'light' ? '#0062cc' : '#0066d6',
+    primaryColorSuppl: theme.value === 'light' ? '#007aff' : '#0a84ff',
+    borderRadius: '9px',
     bodyColor: 'transparent',
     cardColor: 'transparent',
-    inputColor: theme.value === 'light' ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.05)',
-    inputColorDisabled: theme.value === 'light' ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.02)',
-    actionColor: theme.value === 'light' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.05)',
-    buttonColor2: theme.value === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)',
-    textColorBase: theme.value === 'light' ? '#1e293b' : '#dbe4f0',
-    textColor1: theme.value === 'light' ? '#0f172a' : '#e2e8f0',
-    textColor2: theme.value === 'light' ? '#334155' : '#9fb2cc',
-    textColor3: theme.value === 'light' ? '#64748b' : '#5b6b82',
+    inputColor: theme.value === 'light' ? '#f2f2f7' : '#2c2c2e',
+    inputColorDisabled: theme.value === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)',
+    actionColor: theme.value === 'light' ? '#f2f2f7' : '#2c2c2e',
+    buttonColor2: theme.value === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)',
+    textColorBase: theme.value === 'light' ? '#000000' : '#ffffff',
+    textColor1: theme.value === 'light' ? '#000000' : '#ffffff',
+    textColor2: theme.value === 'light' ? 'rgba(60,60,67,0.75)' : 'rgba(235,235,245,0.85)',
+    textColor3: theme.value === 'light' ? 'rgba(60,60,67,0.5)' : 'rgba(235,235,245,0.45)',
   },
 }));
 
