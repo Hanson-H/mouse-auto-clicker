@@ -11,7 +11,8 @@
     "dev": "vite",
     "build:ui": "vite build",
     "pack": "npm run build:ui && electron-builder --dir",
-    "dist": "npm run build:ui && electron-builder"
+    "dist": "npm run build:ui && electron-builder",
+    "dist:safe": "node scripts/safe-pack.js"
   },
   "devDependencies": {
     "electron": "^33.0.0",

@@ -1,5 +1,4 @@
 <template>
-  <n-config-provider :theme="theme === 'light' ? lightTheme : darkTheme" :locale="zhCN" :theme-overrides="themeOverrides">
     <div class="app">
       <!-- 顶栏 -->
       <header class="app-header">
@@ -8,7 +7,13 @@
           <span>鼠标连点器</span>
         </div>
         <div class="header-right">
-          <div class="hotkey-badge">{{ hotkeyBadgeText }}</div>
+          <div class="hotkey-chip">
+            <svg class="chip-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10 8h.01M12 12h.01M14 8h.01M16 12h.01M18 8h.01M6 8h.01M7 16h10m-9-4h.01"/>
+              <rect width="20" height="16" x="2" y="4" rx="2"/>
+            </svg>
+            <span>{{ hotkeyBadgeText }}</span>
+          </div>
           <button class="theme-toggle" :title="theme === 'light' ? '切换到暗色' : '切换到浅色'" @click="toggleTheme">
             <svg v-if="theme === 'light'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
@@ -36,14 +41,18 @@
       <section class="glass-card">
         <div class="card-title">点击间隔</div>
         <div class="row">
-          <n-input-number
-            v-model:value="cfg.interval_ms"
-            :min="10"
-            :step="10"
-            :update-value-on-input="false"
-            style="width: 160px"
-            @update:value="saveCfg"
-          />
+          <div class="stepper">
+            <button class="st-btn" type="button" @click="stepField('interval_ms', -10, 10)">−</button>
+            <input
+              class="st-input"
+              type="text"
+              inputmode="numeric"
+              :value="cfg.interval_ms"
+              @change="onNumInput($event, 'interval_ms', 10)"
+              @keydown.enter="$event.target.blur()"
+            />
+            <button class="st-btn" type="button" @click="stepField('interval_ms', 10, 10)">＋</button>
+          </div>
           <span class="unit">毫秒 (ms)</span>
         </div>
         <p class="hint">每次点击之间的等待时间，最小 10 ms</p>
@@ -59,20 +68,54 @@
         </div>
         <div class="row" style="margin-top: 12px" :class="{ disabled: cfg.mode !== 'fixed' }">
           <span class="label">X</span>
-          <n-input-number v-model:value="cfg.pos_x" :min="0" size="small" style="width: 96px" :disabled="cfg.simType !== 'mouse' || cfg.mode !== 'fixed'" @update:value="saveCfg" />
+          <div class="stepper small">
+            <button class="st-btn" type="button" :disabled="xyDisabled" @click="stepField('pos_x', -1, 0)">−</button>
+            <input
+              class="st-input"
+              type="text"
+              inputmode="numeric"
+              :value="cfg.pos_x"
+              :disabled="xyDisabled"
+              @change="onNumInput($event, 'pos_x', 0)"
+              @keydown.enter="$event.target.blur()"
+            />
+            <button class="st-btn" type="button" :disabled="xyDisabled" @click="stepField('pos_x', 1, 0)">＋</button>
+          </div>
           <span class="label">Y</span>
-          <n-input-number v-model:value="cfg.pos_y" :min="0" size="small" style="width: 96px" :disabled="cfg.simType !== 'mouse' || cfg.mode !== 'fixed'" @update:value="saveCfg" />
+          <div class="stepper small">
+            <button class="st-btn" type="button" :disabled="xyDisabled" @click="stepField('pos_y', -1, 0)">−</button>
+            <input
+              class="st-input"
+              type="text"
+              inputmode="numeric"
+              :value="cfg.pos_y"
+              :disabled="xyDisabled"
+              @change="onNumInput($event, 'pos_y', 0)"
+              @keydown.enter="$event.target.blur()"
+            />
+            <button class="st-btn" type="button" :disabled="xyDisabled" @click="stepField('pos_y', 1, 0)">＋</button>
+          </div>
         </div>
         <div class="row" :class="{ disabled: cfg.mode !== 'fixed' }">
-          <n-button size="small" :disabled="cfg.simType !== 'mouse' || cfg.mode !== 'fixed' || pickCounting" @click="startPick">
-            {{ pickBtnText }}
-          </n-button>
+          <button
+            class="btn-tinted"
+            type="button"
+            :disabled="cfg.simType !== 'mouse' || cfg.mode !== 'fixed' || pickCounting"
+            @click="startPick"
+          >
+            <svg class="pick-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12h3m14 0h3M12 2v3m0 14v3"/>
+              <circle cx="12" cy="12" r="7"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <span>{{ pickBtnText }}</span>
+          </button>
         </div>
         <p v-if="cfg.simType !== 'mouse'" class="hint">键盘输入模式下整卡禁用，不可修改</p>
       </section>
 
       <!-- 点击方式 -->
-      <section class="glass-card">
+      <section class="glass-card card-click">
         <div class="card-title">点击方式</div>
         <div class="row spread">
           <span class="label">输入类型</span>
@@ -133,50 +176,20 @@
 
       <!-- 重置 -->
       <div class="reset-row">
-        <n-button size="small" quaternary @click="resetAll">
-          ↺ 重置为默认设置
-        </n-button>
+        <button class="btn-reset" type="button" @click="resetAll">↺ 重置为默认设置</button>
       </div>
 
       <footer class="footer">提示：1000ms 以下短间隔建议优先用「双击」配合较长间隔，或确认无游戏反作弊</footer>
     </div>
-  </n-config-provider>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue';
-import {
-  NConfigProvider,
-  NInputNumber,
-  NButton,
-  darkTheme,
-  lightTheme,
-  zhCN,
-} from 'naive-ui';
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 
 const bridge = window.api;
 
-// ---------- 主题（科技感青蓝配色，随明暗主题切换） ----------
+// ---------- 主题（iOS systemBlue，随明暗主题切换；颜色走 CSS 变量） ----------
 const theme = ref('dark');
-const themeOverrides = computed(() => ({
-  common: {
-    primaryColor: theme.value === 'light' ? '#007aff' : '#0a84ff',
-    primaryColorHover: theme.value === 'light' ? '#1a80ff' : '#409cff',
-    primaryColorPressed: theme.value === 'light' ? '#0062cc' : '#0066d6',
-    primaryColorSuppl: theme.value === 'light' ? '#007aff' : '#0a84ff',
-    borderRadius: '9px',
-    bodyColor: 'transparent',
-    cardColor: 'transparent',
-    inputColor: theme.value === 'light' ? '#f2f2f7' : '#2c2c2e',
-    inputColorDisabled: theme.value === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)',
-    actionColor: theme.value === 'light' ? '#f2f2f7' : '#2c2c2e',
-    buttonColor2: theme.value === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)',
-    textColorBase: theme.value === 'light' ? '#000000' : '#ffffff',
-    textColor1: theme.value === 'light' ? '#000000' : '#ffffff',
-    textColor2: theme.value === 'light' ? 'rgba(60,60,67,0.75)' : 'rgba(235,235,245,0.85)',
-    textColor3: theme.value === 'light' ? 'rgba(60,60,67,0.5)' : 'rgba(235,235,245,0.45)',
-  },
-}));
 
 function applyTheme(t) {
   theme.value = t;
@@ -208,7 +221,7 @@ const runMs = ref(0); // 运行时长（ms）：运行中实时累计，停止�
 let runStartedAt = 0;
 let runTimer = null;
 const pickCounting = ref(false);
-const pickBtnText = ref('⏱ 3 秒后拾取');
+const pickBtnText = ref('3 秒后拾取');
 const capturing = ref(null); // 'start' | 'stop' | null
 const hotkeyTip = ref('点击右侧按键后，直接按下新快捷键即可更换；两个键设为相同时按一下启动、再按停止');
 
@@ -231,6 +244,28 @@ function onSeg(field, e) {
   else if (field === 'mode') cfg.mode = v;
   else if (field === 'button') cfg.button = v;
   else if (field === 'clickType') cfg.double = v === 'double';
+  saveCfg();
+}
+
+// ---------- 自定义数字步进器（替代 NInputNumber，样式零对抗） ----------
+const xyDisabled = computed(() => cfg.simType !== 'mouse' || cfg.mode !== 'fixed');
+
+function clampNum(v, min) {
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n) || n < min) return min;
+  return n;
+}
+
+// + / − 按钮：按步长增减
+function stepField(field, delta, min) {
+  cfg[field] = clampNum((Number(cfg[field]) || min) + delta, min);
+  saveCfg();
+}
+
+// 手动输入：失焦/回车时校验、钳制并保存
+function onNumInput(e, field, min) {
+  cfg[field] = clampNum(e.target.value, min);
+  e.target.value = cfg[field];
   saveCfg();
 }
 
@@ -312,7 +347,7 @@ function startPick() {
       cfg.pos_x = pos.x;
       cfg.pos_y = pos.y;
       saveCfg();
-      pickBtnText.value = '⏱ 3 秒后拾取';
+      pickBtnText.value = '3 秒后拾取';
       pickCounting.value = false;
     }
   };

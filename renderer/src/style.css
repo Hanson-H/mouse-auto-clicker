@@ -79,7 +79,7 @@
   --btn-text: #000000;
   --btn-hover-bg: #e8e8ed;
 
-  --input-bg: #f2f2f7;
+  --input-bg: #ebebed;
   --ring-idle-border: rgba(60, 60, 67, 0.30);
   --ring-idle-inner: rgba(60, 60, 67, 0.18);
   --status-idle: rgba(60, 60, 67, 0.50);
@@ -233,35 +233,53 @@ body {
   white-space: nowrap;
 }
 
-/* ---------- 启停按钮（iOS 胶囊） ---------- */
-/* ---------- 通用按钮（iOS tinted 无框，与快捷键按钮同族，覆盖 Naive UI 默认） ---------- */
-.n-button {
+/* ---------- 通用按钮（拾取等，iOS tinted 无框，与快捷键按钮同族） ---------- */
+.btn-tinted {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 16px;
   border-radius: 9px;
   background: var(--accent-soft);
   border: none;
   color: var(--accent);
+  font-family: inherit;
+  font-size: 13px;
   font-weight: 500;
-  transition: background 0.2s ease;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
 }
 
-.n-button:not(.n-button--disabled):not(.n-button--quaternary):hover {
+.btn-tinted .pick-ic {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.btn-tinted:hover:not(:disabled) {
   background: var(--accent-soft-hover);
 }
 
-/* 重置按钮保持轻量文字风 */
-.n-button--quaternary {
-  background: transparent;
+.btn-tinted:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
-/* radio 选项组：弃用 Naive radio，纯自定义 Segmented（iOS 原生灰槽滑块，0.22s 平移动画） */
+.btn-tinted:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* 切换按钮（纯手写 Segmented，0.22s 滑块动画）：底色与数字步进器（.stepper）同族 */
 .seg {
   position: relative;
   display: inline-flex;
-  background: var(--seg-track);
+  background: var(--input-bg);
   border-radius: 9px;
   padding: 2px;
   cursor: pointer;
-  height: 28px;
+  height: 34px;
 }
 
 .seg.dis {
@@ -275,9 +293,9 @@ body {
   bottom: 2px;
   left: 2px;
   width: calc(50% - 4px);
-  background: var(--seg-thumb);
+  background: var(--accent);
   border-radius: 7px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
   transition: transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1);
   pointer-events: none;
 }
@@ -289,17 +307,22 @@ body {
 .seg .op {
   position: relative;
   z-index: 1;
-  padding: 3px 14px;
-  font-size: 12px;
-  line-height: 20px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 30px;
   border-radius: 7px;
   color: var(--seg-text);
   transition: color 0.2s;
 }
 
 .seg .op.sel {
-  font-weight: 600;
-  color: var(--seg-text-on);
+  color: #ffffff;
+}
+
+/* 点击方式卡：切换按钮内部间距略大（字短，视觉更舒展） */
+.card-click .seg .op {
+  padding: 0 22px;
 }
 
 /* ---------- 快捷键按钮（iOS tinted 无框） ---------- */
@@ -370,14 +393,26 @@ body {
   gap: 8px;
 }
 
-.hotkey-badge {
-  font-size: 10.5px;
-  font-family: 'Inter', 'MiSans', 'Consolas', monospace;
-  color: var(--accent-bright);
-  padding: 3px 10px;
+/* 顶栏热键 chip（iOS systemFill 灰胶囊 + 键盘图标，与输入控件同底色族） */
+.hotkey-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 12px;
   border-radius: 999px;
-  background: var(--accent-soft);
+  background: var(--input-bg);
+  color: var(--text-main);
+  font-size: 11.5px;
+  font-family: 'Inter', 'MiSans', 'Consolas', monospace;
   white-space: nowrap;
+}
+
+.hotkey-chip .chip-ic {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.75;
 }
 
 /* 自动按键徽章（键盘模式下显示固定 F 键，iOS tinted 无框） */
@@ -385,7 +420,7 @@ body {
   font-size: 13.5px;
   font-family: 'Inter', 'MiSans', 'Consolas', monospace;
   font-weight: 700;
-  color: var(--accent-bright);
+  color: var(--accent);
   padding: 3px 15px;
   border-radius: 8px;
   background: var(--accent-soft);
@@ -464,10 +499,73 @@ body {
   color: var(--text-footer);
 }
 
-/* Naive UI 主题适配：数字输入 */
-.n-input-number {
+/* ---------- 自定义数字步进器（替代 NInputNumber：原生 input + 按钮，样式零对抗） ---------- */
+.stepper {
+  display: inline-flex;
+  align-items: stretch;
+  height: 34px;
   background: var(--input-bg);
   border-radius: 8px;
+  overflow: hidden;
+}
+
+.stepper.small {
+  height: 28px;
+}
+
+.st-btn {
+  width: 32px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1;
+  font-family: inherit;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.st-btn:hover {
+  color: var(--text-main);
+}
+
+.st-btn:active {
+  color: var(--accent);
+}
+
+.st-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.st-input {
+  width: 64px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepper .st-input {
+  width: 76px;
+}
+
+.stepper.small .st-input {
+  width: 52px;
+}
+
+.st-input:disabled {
+  opacity: 0.4;
+}
+
+.st-input::selection {
+  background: var(--accent-soft-hover);
 }
 
 /* ---------- 重置按钮行 ---------- */
@@ -477,14 +575,21 @@ body {
   justify-content: center;
 }
 
-.reset-row .n-button {
+.btn-reset {
+  background: none;
+  border: none;
   color: var(--text-unit);
+  font-family: inherit;
   font-size: 12px;
-  transition: color 0.2s;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
 }
 
-.reset-row .n-button:hover {
+.btn-reset:hover {
   color: var(--accent);
+  background: var(--accent-soft);
 }
 
 /* ---------- 滚动条 ---------- */

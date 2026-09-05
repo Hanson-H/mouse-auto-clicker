@@ -1,7 +1,7 @@
 // -*- coding: utf-8 -*-
 // 鼠标连点器 - Electron 版 主进程
 // 功能：Win32 SendInput 模拟点击、自定义启动/暂停全局快捷键、配置持久化
-const { app, BrowserWindow, globalShortcut, ipcMain, nativeTheme } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain, nativeTheme, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const koffi = require('koffi');
@@ -313,6 +313,9 @@ if (!gotTheLock) {
 }
 
 app.whenReady().then(() => {
+  // 移除默认应用菜单（File/Edit/View…），按 Alt 不再弹出编辑栏；
+  // 无菜单时 Chromium 仍保留输入框内的复制/粘贴等编辑快捷键
+  Menu.setApplicationMenu(null);
   loadConfig();
   applyNativeTheme();
   registerHotkeys();
