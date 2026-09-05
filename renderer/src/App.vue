@@ -115,7 +115,7 @@
       </section>
 
       <!-- 点击方式 -->
-      <section class="glass-card card-click">
+      <section class="glass-card">
         <div class="card-title">点击方式</div>
         <div class="row spread">
           <span class="label">输入类型</span>

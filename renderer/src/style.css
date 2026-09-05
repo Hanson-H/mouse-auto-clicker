@@ -5,7 +5,7 @@
    ========================================================================== */
 :root {
   color-scheme: dark;
-  --bg-base: #000000;
+  --bg-base: #141414;
 
   --text-main: rgba(235, 235, 245, 0.92);
   --text-title: #ffffff;
@@ -271,13 +271,14 @@ body {
   cursor: default;
 }
 
-/* 切换按钮（纯手写 Segmented，0.22s 滑块动画）：底色与数字步进器（.stepper）同族 */
+/* 切换按钮（纯手写 Segmented，0.22s 滑块动画）：底色与数字步进器（.stepper）同族，
+   内部选中滑块与外框留 3px 空隙，靠间距制造层次（无边框） */
 .seg {
   position: relative;
   display: inline-flex;
   background: var(--input-bg);
   border-radius: 9px;
-  padding: 2px;
+  padding: 3px;
   cursor: pointer;
   height: 34px;
 }
@@ -289,10 +290,10 @@ body {
 
 .seg .thumb {
   position: absolute;
-  top: 2px;
-  bottom: 2px;
-  left: 2px;
-  width: calc(50% - 4px);
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 6px);
   background: var(--accent);
   border-radius: 7px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
@@ -310,7 +311,7 @@ body {
   padding: 0 16px;
   font-size: 13px;
   font-weight: 500;
-  line-height: 30px;
+  line-height: 28px;
   border-radius: 7px;
   color: var(--seg-text);
   transition: color 0.2s;
@@ -318,11 +319,6 @@ body {
 
 .seg .op.sel {
   color: #ffffff;
-}
-
-/* 点击方式卡：切换按钮内部间距略大（字短，视觉更舒展） */
-.card-click .seg .op {
-  padding: 0 22px;
 }
 
 /* ---------- 快捷键按钮（iOS tinted 无框） ---------- */

@@ -279,7 +279,7 @@ function createWindow() {
     fullscreenable: false,
     title: '鼠标连点器',
     icon: path.join(__dirname, 'app.ico'),
-    backgroundColor: cfg.theme === 'light' ? '#f4f7fb' : '#14161b',
+    backgroundColor: cfg.theme === 'light' ? '#f4f7fb' : '#141414',
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
