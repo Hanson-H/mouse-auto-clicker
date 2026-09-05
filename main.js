@@ -278,6 +278,7 @@ function createWindow() {
     maximizable: false,
     fullscreenable: false,
     title: '鼠标连点器',
+    show: false, // 先隐藏，等首帧渲染完成再显示，避免启动白屏
     icon: path.join(__dirname, 'app.ico'),
     backgroundColor: cfg.theme === 'light' ? '#f4f7fb' : '#141414',
     autoHideMenuBar: true,
@@ -288,6 +289,15 @@ function createWindow() {
       sandbox: false,
     },
   });
+  // 首帧渲染就绪后才显示窗口（Electron 官方防白屏做法）
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    mainWindow.focus();
+  });
+  // 兜底：若 ready-to-show 长时间未触发（异常场景），3 秒后强制显示避免窗口永不出现
+  setTimeout(() => {
+    if (mainWindow && !mainWindow.isVisible()) mainWindow.show();
+  }, 3000);
   // 开发模式走 Vite 开发服务器（HMR），生产模式加载 Vite 构建产物
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
