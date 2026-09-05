@@ -26,6 +26,8 @@ const INPUT = koffi.struct('INPUT', {
 });
 
 const SendInput = user32.func('int SendInput(int cInputs, INPUT *pInputs, int cbSize)');
+// 键盘模拟走 keybd_event（标量参数，无 struct 布局风险；内部即 SendInput 封装）
+const keybd_event = user32.func('void keybd_event(uint8 bVk, uint8 bScan, uint32 dwFlags, uintptr dwExtraInfo)');
 const GetCursorPos = user32.func('int GetCursorPos(_Out_ POINT *lpPoint)');
 const SetCursorPos = user32.func('int SetCursorPos(int X, int Y)');
 
@@ -41,9 +43,17 @@ const MOUSEEVENTF_LEFTDOWN = 0x0002;
 const MOUSEEVENTF_LEFTUP = 0x0004;
 const MOUSEEVENTF_RIGHTDOWN = 0x0008;
 const MOUSEEVENTF_RIGHTUP = 0x0010;
+const KEYEVENTF_KEYUP = 0x0002;
+const VK_F = 0x46; // 字母 f 键的虚拟键码
 
 function sendMouse(flags) {
   SendInput(1, { type: INPUT_MOUSE, dwFlags: flags }, koffi.sizeof(INPUT));
+}
+
+function sendKey(vk) {
+  // 单击模式：down → up（keybd_event 标量参数，规避 koffi struct 布局问题）
+  keybd_event(vk, 0, 0, 0);
+  keybd_event(vk, 0, KEYEVENTF_KEYUP, 0);
 }
 
 function doClick(x, y, button, double) {
@@ -69,6 +79,7 @@ function getCursorPos() {
 // ----------------------------------------------------------------------------
 const DEFAULT_CFG = {
   interval_ms: 100,
+  simType: 'mouse',      // mouse / keyboard
   mode: 'follow',        // follow / fixed
   pos_x: 500,
   pos_y: 400,
@@ -112,13 +123,18 @@ function pushStatus() {
 
 function clickLoop() {
   if (!running) return;
-  const fixed = cfg.mode === 'fixed';
-  doClick(
-    fixed ? Math.round(cfg.pos_x) : null,
-    fixed ? Math.round(cfg.pos_y) : null,
-    cfg.button,
-    !!cfg.double
-  );
+  if (cfg.simType === 'keyboard') {
+    // 键盘模式：连按字母 f（单击模式 down + up）
+    sendKey(VK_F);
+  } else {
+    const fixed = cfg.mode === 'fixed';
+    doClick(
+      fixed ? Math.round(cfg.pos_x) : null,
+      fixed ? Math.round(cfg.pos_y) : null,
+      cfg.button,
+      !!cfg.double
+    );
+  }
   clickCount += 1;
   if (!running) return;
   // 基于绝对时间戳补偿：无论本次点击/调度耗时多少，下一次都落在 nextTickAt 上

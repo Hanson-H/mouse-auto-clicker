@@ -285,13 +285,27 @@ body {
 }
 
 .app-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 17px;
   font-weight: 800;
+}
+
+.app-title span {
   letter-spacing: 1px;
   background: linear-gradient(90deg, var(--text-title), var(--text-title-grad-to));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* 标题图标：Phosphor cursor-click（实心箭头+放射线），颜色随主题 accent 变化 */
+.app-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  fill: var(--accent);
 }
 
 .header-right {
@@ -309,6 +323,20 @@ body {
   border: 1px solid rgba(34, 211, 238, 0.35);
   background: rgba(34, 211, 238, 0.07);
   box-shadow: 0 0 10px rgba(34, 211, 238, 0.15);
+  white-space: nowrap;
+}
+
+/* 自动按键徽章（键盘模式下显示固定 f 键） */
+.key-badge {
+  font-size: 13px;
+  font-family: 'MiSans', 'Cascadia Code', 'Consolas', monospace;
+  font-weight: 700;
+  color: var(--accent-bright);
+  padding: 4px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(34, 211, 238, 0.40);
+  background: rgba(34, 211, 238, 0.10);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.20);
   white-space: nowrap;
 }
 

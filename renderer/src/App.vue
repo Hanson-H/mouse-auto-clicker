@@ -3,7 +3,10 @@
     <div class="app">
       <!-- 顶栏 -->
       <header class="app-header">
-        <div class="app-title">🖱 鼠标连点器</div>
+        <div class="app-title">
+          <svg class="app-icon" viewBox="0 0 256 256" aria-hidden="true"><path d="M88 24v-8a8 8 0 0 1 16 0v8a8 8 0 0 1-16 0m-72 80h8a8 8 0 0 0 0-16h-8a8 8 0 0 0 0 16m108.42-64.84a8 8 0 0 0 10.74-3.58l8-16a8 8 0 0 0-14.31-7.16l-8 16a8 8 0 0 0 3.57 10.74m-96 81.69l-16 8a8 8 0 0 0 7.16 14.31l16-8a8 8 0 1 0-7.16-14.31M219.31 184a16 16 0 0 1 0 22.63l-12.68 12.68a16 16 0 0 1-22.63 0L132.7 168L115 214.09c0 .1-.08.21-.13.32a15.83 15.83 0 0 1-14.6 9.59h-.79a15.83 15.83 0 0 1-14.41-11L32.8 52.92A16 16 0 0 1 52.92 32.8L213 85.07a16 16 0 0 1 1.41 29.8l-.32.13L168 132.69ZM208 195.31L156.69 144a16 16 0 0 1 4.93-26l.32-.14l45.95-17.64L48 48l52.2 159.86l17.65-46c0-.11.08-.22.13-.33a16 16 0 0 1 11.69-9.34a16.7 16.7 0 0 1 3-.28a16 16 0 0 1 11.3 4.69l51.34 51.4Z"/></svg>
+          <span>鼠标连点器</span>
+        </div>
         <div class="header-right">
           <div class="hotkey-badge">{{ hotkeyBadgeText }}</div>
           <button class="theme-toggle" :title="theme === 'light' ? '切换到暗色' : '切换到浅色'" @click="toggleTheme">
@@ -40,9 +43,9 @@
       </section>
 
       <!-- 点击位置 -->
-      <section class="glass-card">
+      <section class="glass-card" :class="{ disabled: cfg.simType !== 'mouse' }">
         <div class="card-title">点击位置</div>
-        <n-radio-group v-model:value="cfg.mode" @update:value="saveCfg">
+        <n-radio-group v-model:value="cfg.mode" :disabled="cfg.simType !== 'mouse'" @update:value="saveCfg">
           <n-radio-button value="follow">跟随鼠标</n-radio-button>
           <n-radio-button value="fixed">固定位置</n-radio-button>
         </n-radio-group>
@@ -63,19 +66,39 @@
       <section class="glass-card">
         <div class="card-title">点击方式</div>
         <div class="row spread">
-          <span class="label">鼠标按键</span>
-          <n-radio-group v-model:value="cfg.button" size="small" @update:value="saveCfg">
-            <n-radio-button value="left">左键</n-radio-button>
-            <n-radio-button value="right">右键</n-radio-button>
+          <span class="label">输入类型</span>
+          <n-radio-group v-model:value="cfg.simType" size="small" @update:value="saveCfg">
+            <n-radio-button value="mouse">鼠标</n-radio-button>
+            <n-radio-button value="keyboard">键盘</n-radio-button>
           </n-radio-group>
         </div>
-        <div class="row spread">
-          <span class="label">点击类型</span>
-          <n-radio-group v-model:value="clickType" size="small" @update:value="saveCfg">
-            <n-radio-button value="single">单击</n-radio-button>
-            <n-radio-button value="double">双击</n-radio-button>
-          </n-radio-group>
-        </div>
+
+        <!-- 鼠标分支 -->
+        <template v-if="cfg.simType === 'mouse'">
+          <div class="row spread">
+            <span class="label">鼠标按键</span>
+            <n-radio-group v-model:value="cfg.button" size="small" @update:value="saveCfg">
+              <n-radio-button value="left">左键</n-radio-button>
+              <n-radio-button value="right">右键</n-radio-button>
+            </n-radio-group>
+          </div>
+          <div class="row spread">
+            <span class="label">点击类型</span>
+            <n-radio-group v-model:value="clickType" size="small" @update:value="saveCfg">
+              <n-radio-button value="single">单击</n-radio-button>
+              <n-radio-button value="double">双击</n-radio-button>
+            </n-radio-group>
+          </div>
+        </template>
+
+        <!-- 键盘分支：固定显示 F -->
+        <template v-else>
+          <div class="row spread">
+            <span class="label">按键</span>
+            <span class="key-badge">F</span>
+          </div>
+          <p class="hint">点击位置 / 鼠标按键 / 点击类型不生效</p>
+        </template>
       </section>
 
       <!-- 快捷键 -->
@@ -160,6 +183,7 @@ function toggleTheme() {
 // ---------- 状态 ----------
 const cfg = reactive({
   interval_ms: 100,
+  simType: 'mouse',
   mode: 'follow',
   pos_x: 500,
   pos_y: 400,
@@ -190,6 +214,7 @@ const hotkeyBadgeText = computed(() =>
 function saveCfg() {
   bridge.saveConfig({
     interval_ms: cfg.interval_ms,
+    simType: cfg.simType,
     mode: cfg.mode,
     pos_x: cfg.pos_x,
     pos_y: cfg.pos_y,
@@ -207,6 +232,7 @@ async function resetAll() {
   const c = await bridge.resetConfig();
   Object.assign(cfg, {
     interval_ms: c.interval_ms,
+    simType: c.simType || 'mouse',
     mode: c.mode,
     pos_x: c.pos_x,
     pos_y: c.pos_y,
@@ -218,7 +244,7 @@ async function resetAll() {
   running.value = !!c.running;
   clickCount.value = c.clickCount || 0;
   applyTheme(c.theme === 'light' ? 'light' : 'dark');
-  hotkeyTip.value = '已重置为默认设置（间隔 100ms、跟随鼠标、左键单击、F6/F7）';
+  hotkeyTip.value = '已重置为默认设置（间隔 100ms、输入类型 鼠标、跟随鼠标、左键单击、F6/F7）';
 }
 
 // ---------- 坐标拾取 ----------
@@ -301,6 +327,7 @@ onMounted(async () => {
   const c = await bridge.getConfig();
   Object.assign(cfg, {
     interval_ms: c.interval_ms,
+    simType: c.simType || 'mouse', // 兼容旧 config.json（无此字段时回落鼠标模式）
     mode: c.mode,
     pos_x: c.pos_x,
     pos_y: c.pos_y,
