@@ -1,7 +1,7 @@
 {
   "name": "mouse-auto-clicker",
   "productName": "鼠标连点器",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "鼠标连点器 - Electron 版（自定义启动/暂停快捷键）",
   "main": "main.js",
   "author": "Hanson",
