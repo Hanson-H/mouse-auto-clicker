@@ -33,7 +33,8 @@
       "main.js",
       "preload.js",
       "renderer/dist/**/*",
-      "app.ico"
+      "app.ico",
+      "tray-*.png"
     ],
     "win": {
       "icon": "app.ico",

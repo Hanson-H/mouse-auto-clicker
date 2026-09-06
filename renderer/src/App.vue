@@ -174,6 +174,19 @@
         <p class="hint">{{ hotkeyTip }}</p>
       </section>
 
+      <!-- 设置 -->
+      <section class="glass-card">
+        <div class="card-title">设置</div>
+        <div class="row spread">
+          <span class="label">状态提示音</span>
+          <div class="seg sound-seg" :class="{ r2: !cfg.soundOn }" @click="onSeg('soundOn', $event)">
+            <div class="thumb"></div>
+            <span class="op" data-v="on"  :class="{ sel: cfg.soundOn }">开</span>
+            <span class="op" data-v="off" :class="{ sel: !cfg.soundOn }">关</span>
+          </div>
+        </div>
+      </section>
+
       <!-- 重置 -->
       <div class="reset-row">
         <button class="btn-reset" type="button" @click="resetAll">↺ 重置为默认设置</button>
@@ -214,6 +227,7 @@ const cfg = reactive({
   double: false,
   startHotkey: 'F6',
   stopHotkey: 'F7',
+  soundOn: true,
 });
 const running = ref(false);
 const clickCount = ref(0);
@@ -244,6 +258,7 @@ function onSeg(field, e) {
   else if (field === 'mode') cfg.mode = v;
   else if (field === 'button') cfg.button = v;
   else if (field === 'clickType') cfg.double = v === 'double';
+  else if (field === 'soundOn') cfg.soundOn = v === 'on';
   saveCfg();
 }
 
@@ -305,6 +320,7 @@ function saveCfg() {
     pos_y: cfg.pos_y,
     button: cfg.button,
     double: cfg.double,
+    soundOn: cfg.soundOn,
   });
 }
 
@@ -323,6 +339,7 @@ async function resetAll() {
     pos_y: c.pos_y,
     button: c.button,
     double: !!c.double,
+    soundOn: c.soundOn !== false,
     startHotkey: c.startHotkey,
     stopHotkey: c.stopHotkey,
   });
@@ -418,6 +435,7 @@ onMounted(async () => {
     pos_y: c.pos_y,
     button: c.button,
     double: !!c.double,
+    soundOn: c.soundOn !== false,
     startHotkey: c.startHotkey,
     stopHotkey: c.stopHotkey,
   });

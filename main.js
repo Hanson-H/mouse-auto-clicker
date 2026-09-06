@@ -1,7 +1,7 @@
 // -*- coding: utf-8 -*-
 // 鼠标连点器 - Electron 版 主进程
 // 功能：Win32 SendInput 模拟点击、自定义启动/暂停全局快捷键、配置持久化
-const { app, BrowserWindow, globalShortcut, ipcMain, nativeTheme, Menu } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain, nativeTheme, Menu, Tray, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const koffi = require('koffi');
@@ -37,6 +37,25 @@ try {
   const timeBeginPeriod = winmm.func('uint32 timeBeginPeriod(uint32 uPeriod)');
   timeBeginPeriod(1);
 } catch (e) { /* 忽略：非关键，不影响主流程 */ }
+
+// 状态提示音：kernel32 Beep（同步阻塞 ~40-90ms，仅启停瞬间调用，无感知）
+let beepFn = null;
+try {
+  const kernel32 = koffi.load('kernel32.dll');
+  beepFn = kernel32.func('bool Beep(uint32 dwFreq, uint32 dwDuration)');
+} catch (e) { beepFn = null; }
+
+function playBeep(freq, dur) {
+  try { beepFn(freq, dur); } catch (e) { /* 静默失败 */ }
+}
+
+function statusSound(start) {
+  if (!cfg || cfg.soundOn === false) return;
+  if (beepFn) {
+    if (start) { playBeep(660, 35); playBeep(880, 45); } // 升调双音：启动
+    else { playBeep(440, 50); }                            // 低音：停止
+  }
+}
 
 const INPUT_MOUSE = 0;
 const MOUSEEVENTF_LEFTDOWN = 0x0002;
@@ -88,6 +107,7 @@ const DEFAULT_CFG = {
   startHotkey: 'F6',     // 启动连点快捷键
   stopHotkey: 'F7',      // 暂停连点快捷键
   theme: 'dark',         // dark / light
+  soundOn: true,         // 启动/停止提示音
 };
 
 let cfg = { ...DEFAULT_CFG };
@@ -113,8 +133,45 @@ let running = false;
 let clickCount = 0;
 let timer = null;
 let mainWindow = null;
+let tray = null;
 let nextTickAt = 0; // 下一次点击的绝对时间戳（ms），用于消除 setTimeout 累积漂移
 let runStartedAt = 0; // 本次运行开始时间戳（ms），0 表示未运行
+
+// ----------------------------------------------------------------------------
+// 托盘状态图标（闲置灰 / 运行绿），随启停联动
+// ----------------------------------------------------------------------------
+function createTray() {
+  try {
+    const idleImg = nativeImage.createFromPath(path.join(__dirname, 'tray-idle.png'));
+    const runImg = nativeImage.createFromPath(path.join(__dirname, 'tray-running.png'));
+    tray = new Tray(running ? runImg : idleImg);
+    tray.on('click', () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+    const ctxMenu = Menu.buildFromTemplate([
+      { label: '显示主界面', click: () => mainWindow && mainWindow.show() && mainWindow.focus() },
+      { type: 'separator' },
+      { label: '退出', click: () => app.quit() },
+    ]);
+    tray.setContextMenu(ctxMenu);
+    updateTrayState();
+  } catch (e) { tray = null; /* 托盘创建失败不阻塞主流程 */ }
+}
+
+function updateTrayState() {
+  if (!tray) return;
+  const img = running
+    ? nativeImage.createFromPath(path.join(__dirname, 'tray-running.png'))
+    : nativeImage.createFromPath(path.join(__dirname, 'tray-idle.png'));
+  tray.setImage(img);
+  tray.setToolTip(running
+    ? `鼠标连点器 — 连点运行中（${cfg.startHotkey === cfg.stopHotkey ? `${cfg.startHotkey} 停止` : `${cfg.stopHotkey} 停止`}）`
+    : '鼠标连点器 — 未运行');
+}
 
 function pushStatus() {
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -159,14 +216,19 @@ function startClicking() {
   nextTickAt = Date.now(); // 立即点第一下
   clickLoop();
   pushStatus();
+  updateTrayState();
+  statusSound(true);
 }
 
 function stopClicking() {
+  const wasRunning = running;
   running = false;
   runStartedAt = 0;
   if (timer) { clearTimeout(timer); timer = null; }
   saveConfig();
   pushStatus();
+  updateTrayState();
+  if (wasRunning) statusSound(false); // 仅在确实由运行转停止时响提示音（退出兜底不响）
 }
 
 // ----------------------------------------------------------------------------
@@ -330,6 +392,7 @@ app.whenReady().then(() => {
   applyNativeTheme();
   registerHotkeys();
   createWindow();
+  createTray();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

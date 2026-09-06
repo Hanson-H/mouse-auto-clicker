@@ -322,6 +322,11 @@ body {
   color: #ffffff;
 }
 
+/* 设置栏提示音开关：单字选项撑宽到与两字组（鼠标/键盘等）等宽 */
+.sound-seg .op {
+  padding: 0 23px;
+}
+
 /* ---------- 快捷键按钮（iOS tinted 无框） ---------- */
 .hotkey-btn {
   min-width: 120px;
