@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('api', {
   startClick: () => ipcRenderer.invoke('click:start'),
   stopClick: () => ipcRenderer.invoke('click:stop'),
   getCursorPos: () => ipcRenderer.invoke('cursor:pos'),
+  resetStatusbarPosition: () => ipcRenderer.invoke('statusbar:reset-position'),
   onStatus: (cb) => {
     ipcRenderer.on('status', (_e, s) => cb(s));
   },

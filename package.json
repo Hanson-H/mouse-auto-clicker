@@ -2,7 +2,7 @@
   "name": "mouse-auto-clicker",
   "productName": "鼠标连点器",
   "version": "2.4.0",
-  "description": "鼠标连点器 - Electron 版（自定义启动/暂停快捷键）",
+  "description": "鼠标连点器",
   "main": "main.js",
   "author": "Hanson",
   "license": "MIT",
@@ -32,7 +32,10 @@
     "files": [
       "main.js",
       "preload.js",
+      "statusbar.html",
+      "statusbar-preload.js",
       "renderer/dist/**/*",
+      "fonts/*.woff2",
       "app.ico",
       "tray-*.png"
     ],

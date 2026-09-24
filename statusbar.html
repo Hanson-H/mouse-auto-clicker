@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: file:;">
+  <title>鼠标连点器</title>
+  <style>
+    @font-face {
+      font-family: 'MiSans';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url('fonts/MiSans-Medium.woff2') format('woff2');
+    }
+
+    :root {
+      --sb-bg: rgba(28, 28, 30, 0.2);
+      --sb-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+      --sb-dot-idle: rgba(235, 235, 245, 0.50);
+      --sb-text-idle: rgba(235, 235, 245, 0.62);
+      --sb-dot-run: #30d158;
+      --sb-text-run: #30d158;
+    }
+
+    :root[data-theme="light"] {
+      --sb-bg: rgba(255, 255, 255, 0.2);
+      --sb-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      --sb-dot-idle: rgba(60, 60, 67, 0.50);
+      --sb-text-idle: rgba(60, 60, 67, 0.55);
+      --sb-dot-run: #34c759;
+      --sb-text-run: #34c759;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: move;
+    }
+
+    /* 胶囊条：撑满透明窗口，圆角 + hairline 边框 + 阴影，iOS 分组材质 */
+    .pill {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: 999px;
+      background: var(--sb-bg);
+      -webkit-app-region: drag; /* 系统原生拖动：流畅、无 #9477 尺寸 bug */
+      font-family: 'MiSans', -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+      transition: background 0.25s ease;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--sb-dot-idle);
+      transition: background 0.3s ease;
+    }
+
+    .label {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.1px;
+      color: var(--sb-text-idle);
+      white-space: nowrap;
+      transition: color 0.3s ease;
+    }
+
+    .pill.running .dot {
+      background: var(--sb-dot-run);
+    }
+
+    .pill.running .label {
+      color: var(--sb-text-run);
+    }
+  </style>
+</head>
+<body>
+  <div class="pill" id="pill">
+    <span class="dot" id="dot"></span>
+    <span class="label" id="label">已停止</span>
+  </div>
+  <script>
+    const api = window.statusbarApi;
+    const pill = document.getElementById('pill');
+    const label = document.getElementById('label');
+
+    function applyTheme(t) {
+      document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+    }
+
+    function setRunning(r) {
+      pill.classList.toggle('running', r);
+      label.textContent = r ? '运行中' : '已停止';
+    }
+
+    // 初始主题与状态（未收到 status 广播前先对齐）
+    api.getConfig().then((c) => {
+      if (c && c.theme) applyTheme(c.theme);
+      if (c) setRunning(!!c.running);
+    });
+
+    api.onStatus((s) => {
+      if (s && s.theme) applyTheme(s.theme);
+      setRunning(!!(s && s.running));
+    });
+  </script>
+</body>
+</html>

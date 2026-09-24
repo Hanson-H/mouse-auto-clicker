@@ -1,7 +1,7 @@
 // -*- coding: utf-8 -*-
 // 鼠标连点器 - Electron 版 主进程
 // 功能：Win32 SendInput 模拟点击、自定义启动/暂停全局快捷键、配置持久化
-const { app, BrowserWindow, globalShortcut, ipcMain, nativeTheme, Menu, Tray, nativeImage } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain, nativeTheme, Menu, Tray, nativeImage, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const koffi = require('koffi');
@@ -31,12 +31,22 @@ const keybd_event = user32.func('void keybd_event(uint8 bVk, uint8 bScan, uint32
 const GetCursorPos = user32.func('int GetCursorPos(_Out_ POINT *lpPoint)');
 const SetCursorPos = user32.func('int SetCursorPos(int X, int Y)');
 
-// 提升 Windows 定时器分辨率到 1ms，消除 setTimeout 在短间隔下的量化误差
+// 定时器精度控制：连点时提升分辨率到 1ms（消除 setTimeout 短间隔量化误差），
+// 停止时恢复默认——避免未连点时持续抬高系统定时器中断频率、白耗 CPU
+let timeBeginPeriodFn = null;
+let timeEndPeriodFn = null;
 try {
   const winmm = koffi.load('winmm.dll');
-  const timeBeginPeriod = winmm.func('uint32 timeBeginPeriod(uint32 uPeriod)');
-  timeBeginPeriod(1);
+  timeBeginPeriodFn = winmm.func('uint32 timeBeginPeriod(uint32 uPeriod)');
+  timeEndPeriodFn = winmm.func('uint32 timeEndPeriod(uint32 uPeriod)');
 } catch (e) { /* 忽略：非关键，不影响主流程 */ }
+
+function setTimerPrecision(on) {
+  try {
+    if (on) { if (timeBeginPeriodFn) timeBeginPeriodFn(1); }
+    else { if (timeEndPeriodFn) timeEndPeriodFn(1); }
+  } catch (e) { /* 静默 */ }
+}
 
 // 状态提示音：kernel32 Beep（同步阻塞 ~40-90ms，仅启停瞬间调用，无感知）
 let beepFn = null;
@@ -108,6 +118,8 @@ const DEFAULT_CFG = {
   stopHotkey: 'F7',      // 暂停连点快捷键
   theme: 'dark',         // dark / light
   soundOn: true,         // 启动/停止提示音
+  showStatusbar: true,   // 显示置顶状态栏
+  statusbarPos: null,    // 状态栏位置 {x, y}（拖动后记忆）
 };
 
 let cfg = { ...DEFAULT_CFG };
@@ -134,6 +146,10 @@ let clickCount = 0;
 let timer = null;
 let mainWindow = null;
 let tray = null;
+let statusWindow = null;  // 置顶状态栏窗口
+let statusDragging = false;    // 拖动中标志（app-region: drag 由 move 事件驱动）
+let statusDragEndTimer = null; // 拖动结束防抖 timer
+let dragPaused = false;   // 拖动期间临时暂停连点（不改 running、不响提示音）
 let nextTickAt = 0; // 下一次点击的绝对时间戳（ms），用于消除 setTimeout 累积漂移
 let runStartedAt = 0; // 本次运行开始时间戳（ms），0 表示未运行
 
@@ -168,14 +184,15 @@ function updateTrayState() {
     ? nativeImage.createFromPath(path.join(__dirname, 'tray-running.png'))
     : nativeImage.createFromPath(path.join(__dirname, 'tray-idle.png'));
   tray.setImage(img);
-  tray.setToolTip(running
-    ? `鼠标连点器 — 连点运行中（${cfg.startHotkey === cfg.stopHotkey ? `${cfg.startHotkey} 停止` : `${cfg.stopHotkey} 停止`}）`
-    : '鼠标连点器 — 未运行');
+  tray.setToolTip(running ? '鼠标连点器 - 运行中' : '鼠标连点器 - 未运行');
 }
 
 function pushStatus() {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('status', { running, clickCount, runStartedAt });
+  const payload = { running, clickCount, runStartedAt, theme: cfg.theme };
+  for (const w of [mainWindow, statusWindow]) {
+    if (w && !w.isDestroyed()) {
+      w.webContents.send('status', payload);
+    }
   }
 }
 
@@ -212,9 +229,10 @@ function startClicking() {
   }
   running = true;
   saveConfig();
+  setTimerPrecision(true); // 连点开启：提升定时器分辨率保证点击间隔精度
   runStartedAt = Date.now();
   nextTickAt = Date.now(); // 立即点第一下
-  clickLoop();
+  if (!dragPaused) clickLoop(); // 拖动期间不启动循环，拖动结束（finishStatusDrag）后恢复
   pushStatus();
   updateTrayState();
   statusSound(true);
@@ -225,6 +243,7 @@ function stopClicking() {
   running = false;
   runStartedAt = 0;
   if (timer) { clearTimeout(timer); timer = null; }
+  if (wasRunning) setTimerPrecision(false); // 停止连点：恢复默认定时器分辨率，省系统 CPU
   saveConfig();
   pushStatus();
   updateTrayState();
@@ -267,6 +286,7 @@ ipcMain.handle('cfg:get', () => ({ ...cfg, running, clickCount, runStartedAt }))
 ipcMain.handle('cfg:save', (_e, patch) => {
   Object.assign(cfg, patch || {});
   saveConfig();
+  if ('showStatusbar' in (patch || {})) applyStatusBarVisibility();
   return { ...cfg };
 });
 
@@ -300,6 +320,20 @@ ipcMain.handle('click:start', startClicking);
 ipcMain.handle('click:stop', stopClicking);
 ipcMain.handle('cursor:pos', () => getCursorPos());
 
+// 重置状态栏位置到默认（顶部中央）
+ipcMain.handle('statusbar:reset-position', () => {
+  cfg.statusbarPos = null;
+  saveConfig();
+  if (statusWindow && !statusWindow.isDestroyed()) {
+    const wa = screen.getPrimaryDisplay().workArea;
+    const [w] = statusWindow.getSize();
+    const x = wa.x + Math.round((wa.width - w) / 2);
+    const y = wa.y; // 紧贴顶部
+    statusWindow.setBounds({ x, y, width: STATUS_BAR_W, height: STATUS_BAR_H });
+  }
+  return true;
+});
+
 // 重置为默认配置（含快捷键），并停止连点
 ipcMain.handle('cfg:reset', () => {
   stopClicking();
@@ -307,6 +341,7 @@ ipcMain.handle('cfg:reset', () => {
   saveConfig();
   registerHotkeys();
   applyNativeTheme();
+  applyStatusBarVisibility();
   return { ...cfg, running, clickCount };
 });
 
@@ -320,6 +355,7 @@ ipcMain.handle('theme:set', (_e, t) => {
   cfg.theme = t === 'light' ? 'light' : 'dark';
   saveConfig();
   applyNativeTheme();
+  pushStatus(); // 状态栏随主题换色
   return { theme: cfg.theme };
 });
 
@@ -367,7 +403,101 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, 'renderer', 'dist', 'index.html'));
   }
-  mainWindow.on('closed', () => { mainWindow = null; });
+  mainWindow.on('show', () => pushStatus()); // 窗口显示时刷新状态，消除后台期间的视觉残余
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+    app.quit(); // 保持既有语义：关闭主窗口即退出（状态栏为附属窗口，一并退出）
+  });
+}
+
+// ----------------------------------------------------------------------------
+// 状态栏（置顶胶囊条：显示运行中/已停止，支持拖动，可隐藏）
+// ----------------------------------------------------------------------------
+// 固定尺寸：初始定位用 setBounds 锁死宽高，规避 Electron 在 Windows 非 100% 缩放下
+// setPosition 导致窗口尺寸变化的已知 bug（electron#9477）；拖动改用 app-region: drag 系统原生实现
+const STATUS_BAR_W = 92;
+const STATUS_BAR_H = 30;
+
+function applyStatusBarVisibility() {
+  if (!statusWindow) return;
+  if (cfg.showStatusbar === false) statusWindow.hide();
+  else statusWindow.showInactive(); // 显示但不抢焦点
+}
+
+function createStatusBar() {
+  statusWindow = new BrowserWindow({
+    width: STATUS_BAR_W,
+    height: STATUS_BAR_H,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    hasShadow: false,
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'statusbar-preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+  });
+  // 置顶层级最高（覆盖无边框全屏/最大化窗口）
+  statusWindow.setAlwaysOnTop(true, 'screen-saver');
+  // 某些全屏/置顶应用会抢占层级，被拉下时自动纠偏回置顶
+  statusWindow.on('always-on-top-changed', (_e, onTop) => {
+    if (!onTop && statusWindow && !statusWindow.isDestroyed()) {
+      statusWindow.setAlwaysOnTop(true, 'screen-saver');
+    }
+  });
+  // 拖动：app-region: drag 走系统原生拖动（流畅、无 #9477 尺寸 bug），move 事件驱动暂停/恢复
+  statusWindow.on('move', onStatusBarMove);
+  // 初始位置：优先上次拖动记忆，否则主显示器工作区右上角
+  const wa = screen.getPrimaryDisplay().workArea;
+  const [w] = statusWindow.getSize();
+  let x = wa.x + Math.round((wa.width - w) / 2); // 顶部水平居中
+  let y = wa.y; // 紧贴顶部
+  const p = cfg.statusbarPos;
+  if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
+    x = Math.round(p.x);
+    y = Math.round(p.y);
+  }
+  statusWindow.setBounds({ x, y, width: STATUS_BAR_W, height: STATUS_BAR_H });
+  statusWindow.loadFile(path.join(__dirname, 'statusbar.html'));
+  statusWindow.once('ready-to-show', () => {
+    if (cfg.showStatusbar !== false) statusWindow.showInactive();
+    pushStatus(); // 页面就绪后同步状态与主题
+  });
+  statusWindow.on('closed', () => { statusWindow = null; });
+}
+
+// 拖动开始（move 首次触发）：临时暂停连点
+function onStatusBarMove() {
+  if (!statusDragging) {
+    statusDragging = true;
+    dragPaused = true;
+    if (running && timer) { clearTimeout(timer); timer = null; }
+  }
+  if (statusDragEndTimer) clearTimeout(statusDragEndTimer);
+  statusDragEndTimer = setTimeout(finishStatusDrag, 150);
+}
+
+// 拖动结束（move 停止 150ms）：记忆位置、恢复连点
+function finishStatusDrag() {
+  statusDragging = false;
+  dragPaused = false;
+  if (statusWindow && !statusWindow.isDestroyed()) {
+    const [x, y] = statusWindow.getPosition();
+    cfg.statusbarPos = { x, y };
+    saveConfig();
+  }
+  if (running) {
+    nextTickAt = Date.now();
+    clickLoop();
+  }
 }
 
 // 单实例锁：只允许一个实例运行，二次启动时聚焦已有窗口
@@ -392,6 +522,7 @@ app.whenReady().then(() => {
   applyNativeTheme();
   registerHotkeys();
   createWindow();
+  createStatusBar();
   createTray();
 
   app.on('activate', () => {
@@ -400,6 +531,7 @@ app.whenReady().then(() => {
 });
 
 app.on('will-quit', () => {
+  if (statusDragEndTimer) { clearTimeout(statusDragEndTimer); statusDragEndTimer = null; }
   stopClicking();
   globalShortcut.unregisterAll();
 });

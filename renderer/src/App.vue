@@ -1,5 +1,5 @@
 <template>
-    <div class="app">
+    <div class="app" v-if="loaded">
       <!-- 顶栏 -->
       <header class="app-header">
         <div class="app-title">
@@ -37,21 +37,22 @@
         <div class="st-sub">{{ cfg.simType === 'keyboard' ? '键盘' : '鼠标' }} · 每 {{ cfg.interval_ms }}ms</div>
       </section>
 
-      <!-- 点击间隔 -->
-      <section class="glass-card">
+      <!-- 点击间隔（连点运行中禁用修改） -->
+      <section class="glass-card" :class="{ disabled: running }">
         <div class="card-title">点击间隔</div>
         <div class="row">
           <div class="stepper">
-            <button class="st-btn" type="button" @click="stepField('interval_ms', -10, 10)">−</button>
+            <button class="st-btn" type="button" :disabled="running" @click="stepField('interval_ms', -10, 10)">−</button>
             <input
               class="st-input"
               type="text"
               inputmode="numeric"
               :value="cfg.interval_ms"
+              :disabled="running"
               @change="onNumInput($event, 'interval_ms', 10)"
               @keydown.enter="$event.target.blur()"
             />
-            <button class="st-btn" type="button" @click="stepField('interval_ms', 10, 10)">＋</button>
+            <button class="st-btn" type="button" :disabled="running" @click="stepField('interval_ms', 10, 10)">＋</button>
           </div>
           <span class="unit">毫秒 (ms)</span>
         </div>
@@ -185,6 +186,18 @@
             <span class="op" data-v="off" :class="{ sel: !cfg.soundOn }">关</span>
           </div>
         </div>
+        <div class="row spread">
+          <span class="label">置顶状态栏</span>
+          <div class="seg sound-seg" :class="{ r2: !cfg.showStatusbar }" @click="onSeg('showStatusbar', $event)">
+            <div class="thumb"></div>
+            <span class="op" data-v="on"  :class="{ sel: cfg.showStatusbar }">开</span>
+            <span class="op" data-v="off" :class="{ sel: !cfg.showStatusbar }">关</span>
+          </div>
+        </div>
+        <div class="row spread">
+          <span class="label">状态栏位置</span>
+          <button class="btn-tinted" type="button" @click="resetStatusbarPosition">重置位置</button>
+        </div>
       </section>
 
       <!-- 重置 -->
@@ -203,6 +216,7 @@ const bridge = window.api;
 
 // ---------- 主题（iOS systemBlue，随明暗主题切换；颜色走 CSS 变量） ----------
 const theme = ref('dark');
+const loaded = ref(false); // 配置与主题加载完成前不渲染，避免「默认值 → 实际值」按钮跳变
 
 function applyTheme(t) {
   theme.value = t;
@@ -228,6 +242,7 @@ const cfg = reactive({
   startHotkey: 'F6',
   stopHotkey: 'F7',
   soundOn: true,
+  showStatusbar: true,
 });
 const running = ref(false);
 const clickCount = ref(0);
@@ -259,6 +274,7 @@ function onSeg(field, e) {
   else if (field === 'button') cfg.button = v;
   else if (field === 'clickType') cfg.double = v === 'double';
   else if (field === 'soundOn') cfg.soundOn = v === 'on';
+  else if (field === 'showStatusbar') cfg.showStatusbar = v === 'on';
   saveCfg();
 }
 
@@ -321,12 +337,17 @@ function saveCfg() {
     button: cfg.button,
     double: cfg.double,
     soundOn: cfg.soundOn,
+    showStatusbar: cfg.showStatusbar,
   });
 }
 
 function toggleClick() {
   if (running.value) bridge.stopClick();
   else bridge.startClick();
+}
+
+function resetStatusbarPosition() {
+  bridge.resetStatusbarPosition();
 }
 
 async function resetAll() {
@@ -340,6 +361,7 @@ async function resetAll() {
     button: c.button,
     double: !!c.double,
     soundOn: c.soundOn !== false,
+    showStatusbar: c.showStatusbar !== false,
     startHotkey: c.startHotkey,
     stopHotkey: c.stopHotkey,
   });
@@ -436,6 +458,7 @@ onMounted(async () => {
     button: c.button,
     double: !!c.double,
     soundOn: c.soundOn !== false,
+    showStatusbar: c.showStatusbar !== false,
     startHotkey: c.startHotkey,
     stopHotkey: c.stopHotkey,
   });
@@ -443,6 +466,7 @@ onMounted(async () => {
   running.value = !!c.running;
   clickCount.value = c.clickCount || 0;
   applyRunState(!!c.running, c.runStartedAt);
+  loaded.value = true; // 配置与主题就绪后再渲染，消除启动时按钮跳变
 
   window.addEventListener('keydown', onGlobalKeydown);
   bridge.onStatus((s) => {
