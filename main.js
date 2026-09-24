@@ -426,8 +426,10 @@ function applyStatusBarVisibility() {
   // 总开关关闭，或「停止时隐藏」开启且未运行 → 隐藏
   const hidden = cfg.showStatusbar === false
     || (cfg.hideStatusbarWhenStopped === true && !running);
-  if (hidden) statusWindow.hide();
-  else statusWindow.showInactive(); // 显示但不抢焦点
+  // 不调用 hide/show（透明窗口 show 会闪一帧，setOpacity 与透明窗口冲突）：
+  // 窗口常驻，隐藏 = 页面内藏起胶囊（透明窗口零像素不可见）+ 鼠标穿透
+  statusWindow.webContents.send('bar-visibility', !hidden);
+  statusWindow.setIgnoreMouseEvents(hidden, { forward: true });
 }
 
 function createStatusBar() {
@@ -478,7 +480,8 @@ function createStatusBar() {
   statusWindow.once('ready-to-show', () => {
     // focusable:false 在部分 Windows 版本上会丢置顶，ready 后重设置顶双保险
     statusWindow.setAlwaysOnTop(true, 'screen-saver');
-    if (cfg.showStatusbar !== false) statusWindow.showInactive();
+    statusWindow.showInactive(); // 窗口常驻显示（隐藏由页面内藏胶囊实现）
+    applyStatusBarVisibility(); // 初始鼠标穿透 + 可见性同步
     pushStatus(); // 页面就绪后同步状态与主题
   });
   statusWindow.on('closed', () => { statusWindow = null; });
