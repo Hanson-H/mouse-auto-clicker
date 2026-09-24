@@ -119,6 +119,7 @@ const DEFAULT_CFG = {
   theme: 'dark',         // dark / light
   soundOn: true,         // 启动/停止提示音
   showStatusbar: true,   // 显示置顶状态栏
+  hideStatusbarWhenStopped: false, // 已停止时隐藏状态栏（仅运行中显示）
   statusbarPos: null,    // 状态栏位置 {x, y}（拖动后记忆）
 };
 
@@ -234,6 +235,7 @@ function startClicking() {
   nextTickAt = Date.now(); // 立即点第一下
   if (!dragPaused) clickLoop(); // 拖动期间不启动循环，拖动结束（finishStatusDrag）后恢复
   pushStatus();
+  applyStatusBarVisibility(); // 「停止时隐藏」开启时：启动即恢复显示
   updateTrayState();
   statusSound(true);
 }
@@ -246,6 +248,7 @@ function stopClicking() {
   if (wasRunning) setTimerPrecision(false); // 停止连点：恢复默认定时器分辨率，省系统 CPU
   saveConfig();
   pushStatus();
+  applyStatusBarVisibility(); // 「停止时隐藏」开启时：停止即隐藏
   updateTrayState();
   if (wasRunning) statusSound(false); // 仅在确实由运行转停止时响提示音（退出兜底不响）
 }
@@ -286,7 +289,7 @@ ipcMain.handle('cfg:get', () => ({ ...cfg, running, clickCount, runStartedAt }))
 ipcMain.handle('cfg:save', (_e, patch) => {
   Object.assign(cfg, patch || {});
   saveConfig();
-  if ('showStatusbar' in (patch || {})) applyStatusBarVisibility();
+  if ('showStatusbar' in (patch || {}) || 'hideStatusbarWhenStopped' in (patch || {})) applyStatusBarVisibility();
   return { ...cfg };
 });
 
@@ -420,7 +423,10 @@ const STATUS_BAR_H = 30;
 
 function applyStatusBarVisibility() {
   if (!statusWindow) return;
-  if (cfg.showStatusbar === false) statusWindow.hide();
+  // 总开关关闭，或「停止时隐藏」开启且未运行 → 隐藏
+  const hidden = cfg.showStatusbar === false
+    || (cfg.hideStatusbarWhenStopped === true && !running);
+  if (hidden) statusWindow.hide();
   else statusWindow.showInactive(); // 显示但不抢焦点
 }
 
@@ -437,6 +443,8 @@ function createStatusBar() {
     alwaysOnTop: true,
     skipTaskbar: true,
     hasShadow: false,
+    focusable: false, // 不抢焦点：app-region: drag 等同标题栏，Windows 按下即激活窗口切走前台；
+                     // 配合下方 setAlwaysOnTop 双重置顶（focusable:false 需显式重设置顶）
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'statusbar-preload.js'),
@@ -468,6 +476,8 @@ function createStatusBar() {
   statusWindow.setBounds({ x, y, width: STATUS_BAR_W, height: STATUS_BAR_H });
   statusWindow.loadFile(path.join(__dirname, 'statusbar.html'));
   statusWindow.once('ready-to-show', () => {
+    // focusable:false 在部分 Windows 版本上会丢置顶，ready 后重设置顶双保险
+    statusWindow.setAlwaysOnTop(true, 'screen-saver');
     if (cfg.showStatusbar !== false) statusWindow.showInactive();
     pushStatus(); // 页面就绪后同步状态与主题
   });

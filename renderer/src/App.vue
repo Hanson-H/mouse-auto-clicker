@@ -195,6 +195,14 @@
           </div>
         </div>
         <div class="row spread">
+          <span class="label">停止时隐藏状态栏</span>
+          <div class="seg sound-seg" :class="{ r2: !cfg.hideWhenStopped }" @click="onSeg('hideWhenStopped', $event)">
+            <div class="thumb"></div>
+            <span class="op" data-v="on"  :class="{ sel: cfg.hideWhenStopped }">开</span>
+            <span class="op" data-v="off" :class="{ sel: !cfg.hideWhenStopped }">关</span>
+          </div>
+        </div>
+        <div class="row spread">
           <span class="label">状态栏位置</span>
           <button class="btn-tinted" type="button" @click="resetStatusbarPosition">重置位置</button>
         </div>
@@ -243,6 +251,7 @@ const cfg = reactive({
   stopHotkey: 'F7',
   soundOn: true,
   showStatusbar: true,
+  hideWhenStopped: false,
 });
 const running = ref(false);
 const clickCount = ref(0);
@@ -275,6 +284,7 @@ function onSeg(field, e) {
   else if (field === 'clickType') cfg.double = v === 'double';
   else if (field === 'soundOn') cfg.soundOn = v === 'on';
   else if (field === 'showStatusbar') cfg.showStatusbar = v === 'on';
+  else if (field === 'hideWhenStopped') cfg.hideWhenStopped = v === 'on';
   saveCfg();
 }
 
@@ -338,6 +348,7 @@ function saveCfg() {
     double: cfg.double,
     soundOn: cfg.soundOn,
     showStatusbar: cfg.showStatusbar,
+    hideStatusbarWhenStopped: cfg.hideWhenStopped,
   });
 }
 
@@ -362,6 +373,7 @@ async function resetAll() {
     double: !!c.double,
     soundOn: c.soundOn !== false,
     showStatusbar: c.showStatusbar !== false,
+    hideWhenStopped: c.hideStatusbarWhenStopped === true,
     startHotkey: c.startHotkey,
     stopHotkey: c.stopHotkey,
   });
@@ -459,6 +471,7 @@ onMounted(async () => {
     double: !!c.double,
     soundOn: c.soundOn !== false,
     showStatusbar: c.showStatusbar !== false,
+    hideWhenStopped: c.hideStatusbarWhenStopped === true,
     startHotkey: c.startHotkey,
     stopHotkey: c.stopHotkey,
   });
