@@ -120,6 +120,7 @@ const DEFAULT_CFG = {
   soundOn: true,         // 启动/停止提示音
   showStatusbar: true,   // 显示置顶状态栏
   hideStatusbarWhenStopped: false, // 已停止时隐藏状态栏（仅运行中显示）
+  statusbarOpacity: 0.2, // 状态栏背景不透明度挡位（20/40/60/80%）
   statusbarPos: null,    // 状态栏位置 {x, y}（拖动后记忆）
 };
 
@@ -189,7 +190,7 @@ function updateTrayState() {
 }
 
 function pushStatus() {
-  const payload = { running, clickCount, runStartedAt, theme: cfg.theme };
+  const payload = { running, clickCount, runStartedAt, theme: cfg.theme, statusbarOpacity: cfg.statusbarOpacity };
   for (const w of [mainWindow, statusWindow]) {
     if (w && !w.isDestroyed()) {
       w.webContents.send('status', payload);
@@ -290,6 +291,7 @@ ipcMain.handle('cfg:save', (_e, patch) => {
   Object.assign(cfg, patch || {});
   saveConfig();
   if ('showStatusbar' in (patch || {}) || 'hideStatusbarWhenStopped' in (patch || {})) applyStatusBarVisibility();
+  if ('statusbarOpacity' in (patch || {})) pushStatus(); // 透明度变更：推送给状态栏实时生效
   return { ...cfg };
 });
 

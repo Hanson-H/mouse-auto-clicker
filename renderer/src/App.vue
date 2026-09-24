@@ -203,6 +203,15 @@
           </div>
         </div>
         <div class="row spread">
+          <span class="label">状态栏透明度</span>
+          <div class="seg n3" :class="{ dis: running, r2: opacityIdx === 1, r3: opacityIdx === 2 }" @click="onOpacity($event)">
+            <div class="thumb"></div>
+            <span class="op" data-v="0"   :class="{ sel: opacityIdx === 0 }">0</span>
+            <span class="op" data-v="0.2" :class="{ sel: opacityIdx === 1 }">20</span>
+            <span class="op" data-v="0.4" :class="{ sel: opacityIdx === 2 }">40</span>
+          </div>
+        </div>
+        <div class="row spread">
           <span class="label">状态栏位置</span>
           <button class="btn-tinted" type="button" @click="resetStatusbarPosition">重置位置</button>
         </div>
@@ -252,6 +261,7 @@ const cfg = reactive({
   soundOn: true,
   showStatusbar: true,
   hideWhenStopped: false,
+  statusbarOpacity: 0.2,
 });
 const running = ref(false);
 const clickCount = ref(0);
@@ -286,6 +296,23 @@ function onSeg(field, e) {
   else if (field === 'showStatusbar') cfg.showStatusbar = v === 'on';
   else if (field === 'hideWhenStopped') cfg.hideWhenStopped = v === 'on';
   saveCfg();
+}
+
+// 状态栏透明度挡位（20/40/60/80%），连点运行中不可调整
+const OPACITY_TIERS = [0, 0.2, 0.4];
+const opacityIdx = computed(() => {
+  const i = OPACITY_TIERS.indexOf(cfg.statusbarOpacity);
+  return i >= 0 ? i : 0;
+});
+function onOpacity(e) {
+  if (running.value) return; // 运行中禁用
+  const t = e.target.closest('.op');
+  if (!t) return;
+  const v = Number(t.getAttribute('data-v'));
+  if (OPACITY_TIERS.includes(v)) {
+    cfg.statusbarOpacity = v;
+    saveCfg();
+  }
 }
 
 // ---------- 自定义数字步进器（替代 NInputNumber，样式零对抗） ----------
@@ -349,6 +376,7 @@ function saveCfg() {
     soundOn: cfg.soundOn,
     showStatusbar: cfg.showStatusbar,
     hideStatusbarWhenStopped: cfg.hideWhenStopped,
+    statusbarOpacity: cfg.statusbarOpacity,
   });
 }
 
@@ -374,6 +402,7 @@ async function resetAll() {
     soundOn: c.soundOn !== false,
     showStatusbar: c.showStatusbar !== false,
     hideWhenStopped: c.hideStatusbarWhenStopped === true,
+    statusbarOpacity: typeof c.statusbarOpacity === 'number' ? c.statusbarOpacity : 0.2,
     startHotkey: c.startHotkey,
     stopHotkey: c.stopHotkey,
   });
@@ -472,6 +501,7 @@ onMounted(async () => {
     soundOn: c.soundOn !== false,
     showStatusbar: c.showStatusbar !== false,
     hideWhenStopped: c.hideStatusbarWhenStopped === true,
+    statusbarOpacity: typeof c.statusbarOpacity === 'number' ? c.statusbarOpacity : 0.2,
     startHotkey: c.startHotkey,
     stopHotkey: c.stopHotkey,
   });

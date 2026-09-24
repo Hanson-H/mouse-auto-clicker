@@ -14,7 +14,8 @@
     }
 
     :root {
-      --sb-bg: rgba(28, 28, 30, 0.2);
+      --sb-bg-alpha: 0.2;
+      --sb-bg: rgba(28, 28, 30, var(--sb-bg-alpha));
       --sb-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
       --sb-dot-idle: rgba(235, 235, 245, 0.50);
       --sb-text-idle: rgba(235, 235, 245, 0.62);
@@ -23,7 +24,7 @@
     }
 
     :root[data-theme="light"] {
-      --sb-bg: rgba(255, 255, 255, 0.2);
+      --sb-bg: rgba(255, 255, 255, var(--sb-bg-alpha));
       --sb-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
       --sb-dot-idle: rgba(60, 60, 67, 0.50);
       --sb-text-idle: rgba(60, 60, 67, 0.55);
@@ -109,10 +110,18 @@
       pill.style.display = v ? '' : 'none';
     }
 
+    // 背景不透明度（由主进程推送的挡位值）
+    function applyOpacity(v) {
+      if (typeof v === 'number' && v >= 0 && v <= 1) {
+        document.documentElement.style.setProperty('--sb-bg-alpha', String(v));
+      }
+    }
+
     // 初始主题、状态与可见性（未收到广播前先对齐）
     api.getConfig().then((c) => {
       if (c && c.theme) applyTheme(c.theme);
       if (c) setRunning(!!c.running);
+      if (c && typeof c.statusbarOpacity === 'number') applyOpacity(c.statusbarOpacity);
       if (c) applyVisible(!(c.showStatusbar === false
         || (c.hideStatusbarWhenStopped === true && !c.running)));
     });
@@ -120,6 +129,7 @@
     api.onStatus((s) => {
       if (s && s.theme) applyTheme(s.theme);
       setRunning(!!(s && s.running));
+      if (s && typeof s.statusbarOpacity === 'number') applyOpacity(s.statusbarOpacity);
     });
 
     api.onVisibility((v) => applyVisible(!!v));

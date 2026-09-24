@@ -306,6 +306,18 @@ body {
   transform: translateX(100%);
 }
 
+/* 3 档分段控件（状态栏透明度）：等宽 3 段（0/20/40%） */
+.seg.n3 .thumb {
+  width: calc((100% - 6px) / 3);
+}
+.seg.n3.r2 .thumb { transform: translateX(100%); }
+.seg.n3.r3 .thumb { transform: translateX(200%); }
+.seg.n3 .op {
+  width: 40px;
+  padding: 0;
+  text-align: center;
+}
+
 .seg .op {
   position: relative;
   z-index: 1;
